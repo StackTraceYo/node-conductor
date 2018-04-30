@@ -1,43 +1,50 @@
-import {Dispatcher} from "../../dispatch/dispatcher/Dispatcher";
-import {FlowData, FlowDefinition, FlowGraph} from "../flow/FlowGraph";
-import uuid = require("uuid");
+import {RemoteWorker} from "../worker/RemoteWorker";
+import {DispatchStrategy, DispatchStrategyType} from "../strategy/DispatchStrategy";
+import * as request from "request";
+
+
+export interface OrchestratorConfig {
+    strategy: DispatchStrategyType
+}
 
 export class Orchestrator {
 
-    private _dispatcher: Dispatcher;
-    private _flow: FlowGraph;
+    private _workers: { [key: string]: RemoteWorker; };
+    private __workers: RemoteWorker[];
+    private _strategy: DispatchStrategy;
 
-
-    constructor(dispatcher: Dispatcher) {
-        this._dispatcher = dispatcher;
+    constructor(config: OrchestratorConfig) {
+        this._strategy = DispatchStrategy.createFromType(config.strategy || DispatchStrategyType.ROUND_ROBIN);
     }
 
-    orchestrate(graph?: FlowGraph, def?: FlowDefinition) {
-        if (def) {
-            let id = uuid();
-            this._flow = new FlowGraph(id);
-        } else if (graph) {
-            this._flow = graph;
-        }
+    register(address: string, worker: RemoteWorker) {
+        // todo clean workers
+        this._workers[address] = worker;
+        this.__workers.push(worker);
+        // update workers in strategy
+        this._strategy.workers = this.__workers;
     }
 
-    cycle() {
-        //current traversal flow information
-        let step = this._flow.step;
-        let data: FlowData = this._flow.currentStep.data;
-
-        let jobName = data.job;
-        let name = data.name;
-        let running = data.running;
-        let completed = data.completed;
-        //if the current pointer is not running start it
-        if (!running) {
-            //make listeners
-            //schedule
+    schedule(name: string, params: any) {
+        let remote = -1;
+        let cycle = 0;
+        while (remote === -1 && cycle < this.__workers.length) {
+            let pick = this._strategy.pick();
+            remote = pick.jobs.indexOf(name);
+            cycle += 1;
         }
-        if (completed) {
-            //move pointer
-            //schedule
+        if (remote === -1) {
+            return {message: 'no suitable node found'}
+        }
+        else {
+            const worker = this.__workers[remote];
+            const api = `http://${worker.address}/schedule`;
+            request.post(api, {json: {name: name, params: params}},
+                (error, response, body) => {
+                    if (!error && response.statusCode == 200) {
+                        console.log(`Successfully Scheduled to Node at ${worker.address}`)
+                    }
+                })
         }
     }
 

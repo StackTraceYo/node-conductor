@@ -3,13 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "test": "mocha -r ts-node/register src/**/*.spec.ts"
+    "test": "mocha -r ts-node/register src/**/*.spec.ts",
+    "start:hub": "ts-node ./src/Hub.ts"
   },
   "devDependencies": {
     "@types/chai": "^4.1.2",
     "@types/lodash": "^4.14.104",
     "@types/mocha": "^2.2.48",
     "@types/node": "^9.4.6",
+    "@types/request": "^2.47.0",
     "@types/sinon": "^4.1.4",
     "@types/sinon-chai": "^2.7.29",
     "@types/uuid": "^3.4.3",
@@ -19,9 +21,12 @@
     "sinon": "^4.4.2"
   },
   "dependencies": {
+    "express": "latest",
+    "lodash": "^4.17.5",
+    "request": "^2.85.0",
+    "ts-node": "^5.0.0",
     "typescript": "^2.7.2",
     "uuid": "^3.2.1",
-    "ts-node": "^5.0.0",
-    "lodash": "^4.17.5"
+    "ws": "^5.1.1"
   }
 }
