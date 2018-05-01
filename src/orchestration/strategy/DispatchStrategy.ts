@@ -31,12 +31,11 @@ export class RoundRobinDispatchStrategy extends DispatchStrategy {
 
     private _current = 0;
 
-
     pick(): RemoteWorker {
         let size = this._workers.length;
         let pick = size > 0 ? this._current % size : undefined;
         this._current += 1;
-        return pick ? this._workers[pick] : undefined
+        return pick >= 0 ? this._workers[pick] : undefined
     }
 
 }

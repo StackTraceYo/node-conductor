@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "test": "mocha -r ts-node/register src/**/*.spec.ts",
-    "start:hub": "ts-node ./src/Hub.ts"
+    "start:hub": "ts-node ./src/Hub.ts",
+    "start:worker": "ts-node ./src/Remote.ts"
   },
   "devDependencies": {
     "@types/chai": "^4.1.2",

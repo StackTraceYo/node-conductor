@@ -1,7 +1,3 @@
-export interface RemoteRegister {
-
-}
-
 export class RemoteWorker {
 
     private _id: string;
