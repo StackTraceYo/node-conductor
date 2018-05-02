@@ -3,6 +3,7 @@ import {DispatchStrategy, DispatchStrategyType} from "../strategy/DispatchStrate
 import * as request from "request";
 import * as _ from "lodash";
 import {OrchestratorServer} from "./OrchestratorServer";
+import {JobListener} from "../../dispatch/job/Job";
 
 
 export interface OrchestratorConfig {
@@ -12,6 +13,18 @@ export interface OrchestratorConfig {
 export class Orchestrator {
 
     private _workers: { [key: string]: RemoteWorker; };
+    private _listeners: { [key: string]: JobListener; };
+    private _pending: {
+        [key: string]: {
+            jobId: string,
+        }
+    };
+    private _completed: {
+        [key: string]: {
+            worker: string,
+            result: any
+        }
+    };
     private __workers: RemoteWorker[];
     private _strategy: DispatchStrategy;
     private _server: OrchestratorServer;
@@ -21,6 +34,9 @@ export class Orchestrator {
         this._strategy = DispatchStrategy.createFromType(config.strategy || DispatchStrategyType.ROUND_ROBIN);
         this.__workers = [];
         this._workers = {};
+        this._pending = {};
+        this._listeners = {};
+        this._completed = {};
         this._server = new OrchestratorServer(this);
     }
 
@@ -35,7 +51,7 @@ export class Orchestrator {
         this._strategy.workers = newWorkers;
     }
 
-    schedule(name: string, params?: any) {
+    schedule(name: string, params?: any, listener?: JobListener) {
         console.log('Scheduling..');
         let remote = -1;
         let cycle = 0;
@@ -54,11 +70,38 @@ export class Orchestrator {
             request.post(api, {json: {name: name, params: params}},
                 (error, response, body) => {
                     if (!error && response.statusCode == 200) {
-                        console.log(`Successfully Scheduled to Node at ${worker.address}`)
+                        console.log(`Successfully Scheduled to Node at ${worker.address}`);
+                        let id = response.toJSON().body.id;
+                        let callbackData = {
+                            jobId: id,
+                            worker: worker.id
+                        };
+                        this._pending[worker.id] = id;
+                        listener = listener ? listener : null;
+                        this._listeners[id] = listener;
                     } else {
                         console.log(`Error Scheduling to Node at ${worker.address}: `, body)
                     }
                 })
         }
+    }
+
+    complete(worker: string, job: string, result: any) {
+        console.log(`Job ${job} from remote worker ${worker} finished`);
+        let listener = this._listeners[job];
+        listener ? listener.onJobCompleted(result) : null;
+        delete this._pending[worker][job];
+        this._completed[job] = {
+            worker: worker,
+            result: result
+        }
+    }
+
+    public fetch(id: string) {
+        return this.isComplete(id) ? this._completed[id] : undefined;
+    }
+
+    private isComplete(id: string) {
+        return !!this._completed[id];
     }
 }

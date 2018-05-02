@@ -6,7 +6,7 @@ class TestJob extends Job<String> {
 
     async execute(): Promise<string> {
         this.emit("Executing Job");
-        console.log('TEST JOB')
+        console.log('TEST JOB');
         return "Job Return Value";
     }
 }
@@ -19,5 +19,5 @@ const worker = new WorkNode({
             'test': TestJob
         }
     }),
-    hubs: ['http://localhost:8999']
+    hub: 'http://localhost:8999'
 });

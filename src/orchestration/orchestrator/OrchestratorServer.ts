@@ -33,11 +33,16 @@ export class OrchestratorServer {
             }
         });
 
-        this.router.post('/job/complete', function (req, res) {
-            const jobId: string = req.body.job;
+        this.router.post('/job/complete', (req, res) => {
+            console.log('Completed Job:', req.body);
+            const jobId = req.body.job || false;
+            const worker = req.body.worker || false;
             const result: any = req.body.jobResult;
-            if (result) {
-
+            if (jobId && worker) {
+                this.orch.complete(worker, jobId, result);
+                res.json({message: 'success', id: jobId})
+            } else {
+                res.json({message: 'missing one or more values', id: jobId, worker: worker})
             }
         });
 

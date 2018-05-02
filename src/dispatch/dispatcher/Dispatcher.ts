@@ -37,6 +37,8 @@ export class Dispatcher {
     private _jobQueue: Queue<NamedJob>;
     private _running: { [key: string]: Job<any>; };
     private _completed: string[];
+    private _finishedData: { [key: string]: JobResult; };
+
     private _listeners: { [key: string]: JobListener; };
     private _numberRunning: number;
     private _maxConcurrent: number;
@@ -56,6 +58,7 @@ export class Dispatcher {
         this._running = {};
         this._listeners = {};
         this._completed = [];
+        this._finishedData = {};
         let configuration = {...defaultConfig, ...config};
         console.log(configuration);
         this._maxConcurrent = configuration.concurrent;
@@ -210,8 +213,19 @@ export class Dispatcher {
         this._numberRunning--;
         //set value to completed
         this._completed.push(returnValue.id);
+        this._finishedData[returnValue.id] = returnValue.data;
         //remove from running
         delete this._running[returnValue.id];
         console.log(`Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`)
     };
+
+    public fetch(id: string) {
+        return this.isComplete(id) ? this._finishedData[id] : undefined;
+    }
+
+    public clean(id: string) {
+        delete this._completed[id];
+        delete this._finishedData[id];
+        delete this._listeners[id];
+    }
 }
