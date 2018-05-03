@@ -1,6 +1,7 @@
 import {Queue} from "../../util/queue/Queue";
 import {END, ERROR, EXEC, Job, JobListener, JobResult, START} from "../job/Job";
 import {v4 as uuid} from 'uuid';
+import {JobResultStore} from "../../store/JobResultStore";
 import _ = require("lodash");
 import Timer = NodeJS.Timer;
 
@@ -34,21 +35,21 @@ const defaultConfig: DispatcherConfig = {
 
 export class Dispatcher {
 
-    private _jobQueue: Queue<NamedJob>;
-    private _running: { [key: string]: Job<any>; };
-    private _completed: string[];
-    private _finishedData: { [key: string]: JobResult; };
+    private readonly _running: { [key: string]: Job<any>; };
+    private readonly _completed: string[];
+    private readonly _listeners: { [key: string]: JobListener; };
+    private readonly _maxConcurrent: number;
+    private readonly _cycleTime: number;
+    private readonly _idleCycleTime: number;
+    private readonly _idleCycleCount: number;
+    private readonly _cycleOff: boolean;
 
-    private _listeners: { [key: string]: JobListener; };
+    private _jobQueue: Queue<NamedJob>;
     private _numberRunning: number;
-    private _maxConcurrent: number;
-    private _cycleTime: number;
-    private _idleCycleTime: number;
     private _idle: boolean;
     private _idleCycles: number;
-    private _idleCycleCount: number;
     private _timeoutHandle: Timer;
-    private _cycleOff: boolean;
+    private _store = new JobResultStore();
 
     constructor(config?: DispatcherConfig) {
         this._jobQueue = new Queue<NamedJob>();
@@ -58,7 +59,6 @@ export class Dispatcher {
         this._running = {};
         this._listeners = {};
         this._completed = [];
-        this._finishedData = {};
         let configuration = {...defaultConfig, ...config};
         console.log(configuration);
         this._maxConcurrent = configuration.concurrent;
@@ -213,19 +213,18 @@ export class Dispatcher {
         this._numberRunning--;
         //set value to completed
         this._completed.push(returnValue.id);
-        this._finishedData[returnValue.id] = returnValue.data;
+        this._store.push(returnValue);
         //remove from running
         delete this._running[returnValue.id];
         console.log(`Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`)
     };
 
     public fetch(id: string) {
-        return this.isComplete(id) ? this._finishedData[id] : undefined;
+        return this.isComplete(id) ? this._store.fetch(id) : undefined;
     }
 
     public clean(id: string) {
         delete this._completed[id];
-        delete this._finishedData[id];
         delete this._listeners[id];
     }
 }

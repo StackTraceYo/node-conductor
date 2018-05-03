@@ -1,8 +1,10 @@
+import * as request from "request";
+
 export class RemoteWorker {
 
-    private _id: string;
-    private _address: string;
-    private _jobs: string[];
+    private readonly _id: string;
+    private readonly _address: string;
+    private readonly _jobs: string[];
 
 
     constructor(id: string, address: string, jobs: string[]) {

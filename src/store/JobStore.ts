@@ -6,8 +6,8 @@ interface JobStoreConfig {
 
 export class JobStore {
 
-    private _jobs: { [key: string]: any; };
-    private _jobnames: string[];
+    private readonly _jobs: { [key: string]: any; };
+    private readonly _jobnames: string[];
 
     constructor(config: JobStoreConfig) {
         this._jobs = config.jobs;

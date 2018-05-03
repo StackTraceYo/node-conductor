@@ -12,12 +12,12 @@ export class OrchestratorServer {
     private router = express.Router();
     private server = http.createServer(this.app);
 
-    constructor(private orch: Orchestrator) {
+    constructor(private readonly _orch: Orchestrator) {
         this.app.use(this.bodyParser.urlencoded({extended: true}));
         this.app.use(this.bodyParser.json());
 
 
-        this.app.use('/hub', this.router);
+        this.app.use('/orchestrator', this.router);
 
         this.router.post('/register', (req, res) => {
             const jobs: string[] = req.body.jobs;
@@ -28,7 +28,7 @@ export class OrchestratorServer {
                 }
                 address = req.body.port ? address + ":" + req.body.port : address;
                 const remoteWorker: RemoteWorker = new RemoteWorker(uuid.v4(), address, jobs);
-                this.orch.register(remoteWorker.id, remoteWorker);
+                this._orch.register(remoteWorker.id, remoteWorker);
                 res.json({message: 'success', id: remoteWorker.id});
             }
         });
@@ -39,7 +39,7 @@ export class OrchestratorServer {
             const worker = req.body.worker || false;
             const result: any = req.body.jobResult;
             if (jobId && worker) {
-                this.orch.complete(worker, jobId, result);
+                this._orch.complete(worker, jobId, result);
                 res.json({message: 'success', id: jobId})
             } else {
                 res.json({message: 'missing one or more values', id: jobId, worker: worker})
@@ -47,8 +47,21 @@ export class OrchestratorServer {
         });
 
         this.router.get('/test', (req, res) => {
-            this.orch.schedule('test');
+            this._orch.schedule('test');
             res.json({message: 'ok'})
+        });
+
+        this.router.get('/job/', (req, res) => {
+            return res.json(this._orch.jobs);
+        });
+
+        this.router.get('/job/:job_id', (req, res) => {
+            return res.json(this._orch.status(req.params.job_id))
+        });
+
+        this.router.get('/job/:job_id/result', (req, res) => {
+            let data = this._orch.fetch(req.params.job_id);
+            data ? res.json({message: 'ok', data: data}) : res.json({message: 'none', data: data})
         });
 
         this.server.listen(process.env.PORT || 8999, () => {

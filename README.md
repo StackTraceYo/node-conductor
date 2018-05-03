@@ -1,2 +1,2 @@
-# node-dispatch
+# node-conductor
 job execution and scheduling in node

@@ -1,5 +1,5 @@
 import {Job} from "./dispatch/job/Job";
-import {JobStore} from "./orchestration/store/JobStore";
+import {JobStore} from "./store/JobStore";
 import {WorkNode} from "./orchestration/worker/WorkNode";
 
 class TestJob extends Job<String> {

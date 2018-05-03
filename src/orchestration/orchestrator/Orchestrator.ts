@@ -12,14 +12,14 @@ export interface OrchestratorConfig {
 
 export class Orchestrator {
 
-    private _workers: { [key: string]: RemoteWorker; };
-    private _listeners: { [key: string]: JobListener; };
-    private _pending: {
+    private readonly _workers: { [key: string]: RemoteWorker; };
+    private readonly _listeners: { [key: string]: JobListener; };
+    private readonly _pending: {
         [key: string]: {
-            jobId: string,
+            worker: string,
         }
     };
-    private _completed: {
+    private readonly _completed: {
         [key: string]: {
             worker: string,
             result: any
@@ -31,13 +31,13 @@ export class Orchestrator {
 
 
     constructor(config: OrchestratorConfig) {
-        this._strategy = DispatchStrategy.createFromType(config.strategy || DispatchStrategyType.ROUND_ROBIN);
         this.__workers = [];
         this._workers = {};
         this._pending = {};
         this._listeners = {};
         this._completed = {};
         this._server = new OrchestratorServer(this);
+        this._strategy = DispatchStrategy.createFromType(config.strategy || DispatchStrategyType.ROUND_ROBIN);
     }
 
     register(address: string, worker: RemoteWorker) {
@@ -72,11 +72,7 @@ export class Orchestrator {
                     if (!error && response.statusCode == 200) {
                         console.log(`Successfully Scheduled to Node at ${worker.address}`);
                         let id = response.toJSON().body.id;
-                        let callbackData = {
-                            jobId: id,
-                            worker: worker.id
-                        };
-                        this._pending[worker.id] = id;
+                        this._pending[id] = {worker: worker.id};
                         listener = listener ? listener : null;
                         this._listeners[id] = listener;
                     } else {
@@ -88,14 +84,48 @@ export class Orchestrator {
 
     complete(worker: string, job: string, result: any) {
         console.log(`Job ${job} from remote worker ${worker} finished`);
-        let listener = this._listeners[job];
+        const listener = this._listeners[job];
         listener ? listener.onJobCompleted(result) : null;
-        delete this._pending[worker][job];
+        delete this._pending[job];
         this._completed[job] = {
             worker: worker,
             result: result
         }
     }
+
+    public get jobs() {
+        const pending = _.map(this._pending, (value, key) => {
+                return {
+                    id: key,
+                    worker: value.worker,
+                    status: 'pending'
+                }
+            }
+        );
+
+        const completed = _.map(this._completed, (value, key) => {
+                return {
+                    id: key,
+                    worker: value.worker,
+                    status: 'done'
+                }
+            }
+        );
+
+        return {
+            jobs: completed.concat(pending)
+        }
+    }
+
+    public status(id: string) {
+        const pending = this._pending[id];
+        const res = !pending ? this._completed[id] : pending;
+        return {
+            status: pending ? 'pending' : res ? 'done' : 'unknown',
+            worker: res ? res.worker : 'unknown'
+        }
+    }
+
 
     public fetch(id: string) {
         return this.isComplete(id) ? this._completed[id] : undefined;
