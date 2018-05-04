@@ -76,11 +76,12 @@ export class Orchestrator {
             request.post(api, {json: {name: name, params: params}},
                 (error, response, body) => {
                     if (!error && response.statusCode == 200) {
-                        console.log(`Successfully Scheduled to Node at ${worker.address}`);
-                        let id = response.toJSON().body.id;
+                        let id = response.body.message;
+                        console.log(`Successfully Scheduled ${id} to Node at ${worker.address}`);
                         this._pending[id] = {worker: worker.id};
                         listener = listener ? listener : null;
                         this._listeners[id] = listener;
+                        console.log(this._pending)
                     } else {
                         console.log(`Error Scheduling to Node at ${worker.address}: `, body)
                     }
@@ -99,7 +100,7 @@ export class Orchestrator {
         }
     }
 
-    public get jobs() {
+    public get all() {
         const pending = _.map(this._pending, (value, key) => {
                 return {
                     id: key,
@@ -119,7 +120,37 @@ export class Orchestrator {
         );
 
         return {
-            jobs: completed.concat(pending)
+            jobs: _.unionBy(pending, completed, "id")
+        }
+    }
+
+    public get completed() {
+
+        const completed = _.map(this._completed, (value, key) => {
+                return {
+                    id: key,
+                    worker: value.worker,
+                    status: 'done'
+                }
+            }
+        );
+
+        return {
+            jobs: completed
+        }
+    }
+
+    public get pending() {
+        const pending = _.map(this._pending, (value, key) => {
+                return {
+                    id: key,
+                    worker: value.worker,
+                    status: 'pending'
+                }
+            }
+        );
+        return {
+            jobs: pending
         }
     }
 

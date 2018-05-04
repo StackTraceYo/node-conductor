@@ -35,9 +35,9 @@ export class OrchestratorServer {
 
         this.router.post('/job/complete', (req, res) => {
             console.log('Completed Job:', req.body);
-            const jobId = req.body.job || false;
+            const jobId = req.body.jobId || false;
             const worker = req.body.worker || false;
-            const result: any = req.body.jobResult;
+            const result: any = req.body.result;
             if (jobId && worker) {
                 this._orch.complete(worker, jobId, result);
                 res.json({message: 'success', id: jobId})
@@ -52,7 +52,15 @@ export class OrchestratorServer {
         });
 
         this.router.get('/job/', (req, res) => {
-            return res.json(this._orch.jobs);
+            return res.json(this._orch.all);
+        });
+
+        this.router.get('/job/done', (req, res) => {
+            return res.json(this._orch.completed);
+        });
+
+        this.router.get('/job/pending', (req, res) => {
+            return res.json(this._orch.pending);
         });
 
         this.router.get('/job/:job_id', (req, res) => {

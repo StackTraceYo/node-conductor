@@ -21,6 +21,7 @@ export class WorkNodeServer {
             const jobParams: string = req.body.params;
             if (jobName) {
                 let id = this.workerNode.schedule(jobName, jobParams);
+                console.log({message: id});
                 res.json({message: id});
             } else {
                 res.json({message: 'no job found'});

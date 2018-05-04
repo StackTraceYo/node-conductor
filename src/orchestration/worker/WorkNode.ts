@@ -51,7 +51,8 @@ export class WorkNode {
         let exists = this._jobStore.jobs.indexOf(name);
         if (exists > -1) {
             let job: Job<any> = this._jobStore.createFromName(name, params);
-            return this._dispatcher.schedule(job, this.jobCompletedListener());
+            const id = this._dispatcher.schedule(job, this.jobCompletedListener());
+            return id;
         } else {
             return 'no job found'
         }
