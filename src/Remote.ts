@@ -19,5 +19,5 @@ const worker = new WorkNode({
             'test': TestJob
         }
     }),
-    hub: 'http://localhost:8999'
+    orchestratorAddress: 'http://localhost:8999'
 });

@@ -12,25 +12,35 @@ export class RemoteOrchestrator {
     }
 
 
-    public connect(options: any, callback?, error?) {
+    public connect(options: any, cb?, err?) {
         request.post(`${this._address}/orchestrator/register`, {json: options},
             (error, response, body) => {
                 if (!error && response.statusCode == 200) {
                     this._remoteId = response.toJSON().body.id;
                     console.log(`Successfully registered to hub at ${this._address} recieved id: ${this._remoteId}`);
+                    cb ? cb(response, body) : undefined;
+                }
+                else {
+                    err(error, response, body);
                 }
             }
         )
     }
 
-    public notifyComplete(response: any, cb?, error?) {
+    public notifyComplete(response: any, cb?, err?) {
         request.post(`${this._address}/orchestrator/job/complete`, {json: response},
             (error, response, body) => {
                 if (!error && response.statusCode == 200) {
-                    // this._dispatcher.clean(arg.id);
+                    cb ? cb(response, body) : undefined;
+                } else {
+                    err(error, response, body)
                 }
             }
         )
+    }
+
+    public get remoteId() {
+        return this._remoteId;
     }
 
 }

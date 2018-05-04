@@ -28,9 +28,9 @@ export class WorkNodeServer {
         });
 
         this.router.post('/disconnect', (req, res) => {
-            res.json({message: this.workerNode._ids[req.body.id]});
+            res.json({message: this.workerNode.id});
             console.log('Disconnecting From: ', req.body.id);
-            delete this.workerNode._ids[req.body.id]
+            this.workerNode.disconnect();
         });
 
         this.server.listen(process.env.PORT || config.port || 8888, () => {

@@ -1,5 +1,3 @@
-import * as request from "request";
-
 export class RemoteWorker {
 
     private readonly _id: string;

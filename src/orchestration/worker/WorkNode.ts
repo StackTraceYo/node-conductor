@@ -7,22 +7,28 @@ import {RemoteOrchestrator} from "../orchestrator/RemoteOrchestrator";
 export interface WorkNodeConfig {
     jobstore: JobStore,
     dispatchConfig?: DispatcherConfig,
-    hub: string,
+    orchestratorAddress: string,
     address?: string
     port?: string
 }
 
 export class WorkNode {
 
+    // job result data
     private _jobStore: JobStore;
+    // job dispatcher
     private _dispatcher: Dispatcher;
+    // server
     private _server: WorkNodeServer;
-    private _rOrch: RemoteOrchestrator;
-    public _ids = {};
-    private readonly _hub: string;
+    // remote orchestrator reference
+    private _remoteOrchestrator: RemoteOrchestrator;
+    // orchestrator address
+    private readonly _orchAddress: string;
+    // worker node id from orchestrator
+    private _id: string;
 
     constructor(public config: WorkNodeConfig) {
-        this._hub = config.hub;
+        this._orchAddress = config.orchestratorAddress;
         this._jobStore = config.jobstore;
         this._dispatcher = new Dispatcher(config.dispatchConfig);
         this._server = new WorkNodeServer(this, {port: config.port});
@@ -31,13 +37,14 @@ export class WorkNode {
             address: config.address,
             port: config.port
         };
-        this._rOrch = new RemoteOrchestrator(this._hub);
-
+        this._remoteOrchestrator = new RemoteOrchestrator(this._orchAddress);
         this.connectToOrchestrator(remote);
     }
 
     private connectToOrchestrator(data: any) {
-        this._rOrch.connect(data);
+        this._remoteOrchestrator.connect(data, (r, b) => {
+            this._id = r.toJSON().body.id;
+        });
     }
 
     public schedule(name: string, params?: any) {
@@ -56,11 +63,19 @@ export class WorkNode {
                 console.log('Job Completed');
                 let response = {
                     jobId: arg.id,
-                    worker: this._ids[this._hub],
+                    worker: this._remoteOrchestrator.remoteId,
                     result: arg.data
                 };
-                this._rOrch.notifyComplete(response);
+                this._remoteOrchestrator.notifyComplete(response);
             }
         };
+    }
+
+    public get id() {
+        return this._id;
+    }
+
+    public disconnect() {
+        this._id = undefined;
     }
 }

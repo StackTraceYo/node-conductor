@@ -12,21 +12,27 @@ export interface OrchestratorConfig {
 
 export class Orchestrator {
 
+    // registered workers
     private readonly _workers: { [key: string]: RemoteWorker; };
+    // job completion listeners
     private readonly _listeners: { [key: string]: JobListener; };
+    // pending ids and thair worker
     private readonly _pending: {
         [key: string]: {
             worker: string,
         }
     };
+    // completed jobs their works and the result
     private readonly _completed: {
         [key: string]: {
             worker: string,
             result: any
         }
     };
+    // array of workers
     private __workers: RemoteWorker[];
     private _strategy: DispatchStrategy;
+    //server
     private _server: OrchestratorServer;
 
 
