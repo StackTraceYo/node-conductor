@@ -33,6 +33,16 @@ export class OrchestratorServer {
             }
         });
 
+        this.router.post('/disconnect', (req, res) => {
+            let address = req.ip;
+            if (req.body.address) {
+                address = req.body.address;
+            }
+            address = req.body.port ? address + ":" + req.body.port : address;
+            this._orch.unregister(address, req.body.id);
+            res.json({message: 'success'});
+        });
+
         this.router.post('/job/complete', (req, res) => {
             console.log('Completed Job:', req.body);
             const jobId = req.body.jobId || false;
@@ -68,6 +78,11 @@ export class OrchestratorServer {
         });
 
         this.router.get('/job/:job_id/result', (req, res) => {
+            let data = this._orch.get(req.params.job_id);
+            data ? res.json({message: 'ok', data: data}) : res.json({message: 'none', data: data})
+        });
+
+        this.router.get('/job/:job_id/check', (req, res) => {
             let data = this._orch.fetch(req.params.job_id);
             data ? res.json({message: 'ok', data: data}) : res.json({message: 'none', data: data})
         });

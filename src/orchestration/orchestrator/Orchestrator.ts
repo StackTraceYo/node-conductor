@@ -4,31 +4,38 @@ import * as request from "request";
 import * as _ from "lodash";
 import {OrchestratorServer} from "./OrchestratorServer";
 import {JobListener} from "../../dispatch/job/Job";
+import {JobResultStore} from "../../store/JobResultStore";
 
 
 export interface OrchestratorConfig {
-    strategy: DispatchStrategyType
+    strategy: DispatchStrategyType,
+    startServer: boolean
 }
 
 export class Orchestrator {
 
     // registered workers
     private readonly _workers: { [key: string]: RemoteWorker; };
+    private readonly _workersById: { [key: string]: RemoteWorker; };
     // job completion listeners
     private readonly _listeners: { [key: string]: JobListener; };
-    // pending ids and thair worker
+
+    // pending ids and their worker
     private readonly _pending: {
         [key: string]: {
             worker: string,
         }
     };
+
     // completed jobs their works and the result
     private readonly _completed: {
         [key: string]: {
-            worker: string,
-            result: any
+            worker: string
         }
     };
+
+    private readonly _jobStore: JobResultStore;
+
     // array of workers
     private __workers: RemoteWorker[];
     private _strategy: DispatchStrategy;
@@ -38,21 +45,40 @@ export class Orchestrator {
 
     constructor(config: OrchestratorConfig) {
         this.__workers = [];
+        this._workersById = {};
         this._workers = {};
         this._pending = {};
-        this._listeners = {};
         this._completed = {};
-        this._server = new OrchestratorServer(this);
+        this._listeners = {};
+        this._jobStore = new JobResultStore();
+        if (config.startServer) {
+            this._server = new OrchestratorServer(this);
+        }
         this._strategy = DispatchStrategy.createFromType(config.strategy || DispatchStrategyType.ROUND_ROBIN);
     }
 
     register(address: string, worker: RemoteWorker) {
         this._workers[address] = worker;
+        this._workersById[worker.id] = worker;
+
         let newWorkers = _.filter(this.__workers, value => {
             return value.address !== address;
         });
 
         newWorkers.push(worker);
+        this.__workers = newWorkers;
+        this._strategy.workers = newWorkers;
+    }
+
+    unregister(address: string, id: string) {
+        let unregistering = this._workers[address];
+        if (unregistering) {
+            delete this._workersById[unregistering.id];
+            delete this._workers[address]
+        }
+        let newWorkers = _.filter(this.__workers, value => {
+            return value.address !== address;
+        });
         this.__workers = newWorkers;
         this._strategy.workers = newWorkers;
     }
@@ -78,7 +104,7 @@ export class Orchestrator {
                     if (!error && response.statusCode == 200) {
                         let id = response.body.message;
                         console.log(`Successfully Scheduled ${id} to Node at ${worker.address}`);
-                        this._pending[id] = {worker: worker.id};
+                        this.pend(id, worker);
                         listener = listener ? listener : null;
                         this._listeners[id] = listener;
                         console.log(this._pending)
@@ -89,14 +115,25 @@ export class Orchestrator {
         }
     }
 
+    pend(id: string, worker: RemoteWorker) {
+        this._pending[id] = {worker: worker.id};
+    }
+
     complete(worker: string, job: string, result: any) {
         console.log(`Job ${job} from remote worker ${worker} finished`);
         const listener = this._listeners[job];
         listener ? listener.onJobCompleted(result) : null;
-        delete this._pending[job];
-        this._completed[job] = {
-            worker: worker,
-            result: result
+        let pending = this._pending[job];
+        if (pending.worker === worker) {
+            delete this._pending[job];
+            this._completed[job] = {worker: worker};
+            this._jobStore.push(
+                {
+                    id: job,
+                    worker: worker,
+                    data: result
+                }
+            );
         }
     }
 
@@ -110,7 +147,7 @@ export class Orchestrator {
             }
         );
 
-        const completed = _.map(this._completed, (value, key) => {
+        const completed = _.map(this._jobStore.jobResults(), (value, key) => {
                 return {
                     id: key,
                     worker: value.worker,
@@ -126,7 +163,7 @@ export class Orchestrator {
 
     public get completed() {
 
-        const completed = _.map(this._completed, (value, key) => {
+        const completed = _.map(this._jobStore.jobResults(), (value, key) => {
                 return {
                     id: key,
                     worker: value.worker,
@@ -165,10 +202,38 @@ export class Orchestrator {
 
 
     public fetch(id: string) {
-        return this.isComplete(id) ? this._completed[id] : undefined;
+        return this.isComplete(id) ? this._jobStore.fetch(id) : undefined;
+    }
+
+    public get(id: string) {
+        return this.isComplete(id) ? this._jobStore.get(id) : undefined;
     }
 
     private isComplete(id: string) {
         return !!this._completed[id];
+    }
+
+    get workers(): { [p: string]: RemoteWorker } {
+        return this._workers;
+    }
+
+    get listeners(): { [p: string]: JobListener } {
+        return this._listeners;
+    }
+
+    get jobStore(): JobResultStore {
+        return this._jobStore;
+    }
+
+    get workerslist(): RemoteWorker[] {
+        return this.__workers;
+    }
+
+    get idworkers(): { [p: string]: RemoteWorker } {
+        return this._workersById;
+    }
+
+    get strategy(): DispatchStrategy {
+        return this._strategy;
     }
 }

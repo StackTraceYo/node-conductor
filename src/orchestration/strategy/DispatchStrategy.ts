@@ -12,11 +12,13 @@ export abstract class DispatchStrategy {
         this._workers = workers || [];
     }
 
-    public set workers(workers: RemoteWorker[]) {
-        this._workers = workers;
-    }
+    public abstract set workers(workers: RemoteWorker[]);
+
+    public abstract get workers(): RemoteWorker[];
 
     public abstract pick(): RemoteWorker;
+
+    public abstract get type(): DispatchStrategyType;
 
     public static createFromType(type: DispatchStrategyType) {
         switch (type) {
@@ -38,4 +40,17 @@ export class RoundRobinDispatchStrategy extends DispatchStrategy {
         return pick >= 0 ? this._workers[pick] : undefined
     }
 
+    get type(): DispatchStrategyType {
+        return DispatchStrategyType.ROUND_ROBIN;
+    }
+
+    public set workers(workers: RemoteWorker[]) {
+        this._current = 0;
+        this._workers = workers;
+    }
+
+
+    public get workers(): RemoteWorker[] {
+        return this._workers;
+    }
 }
