@@ -5,7 +5,7 @@ import * as _ from "lodash";
 import {OrchestratorServer} from "./OrchestratorServer";
 import {JobListener} from "../../dispatch/job/Job";
 import {JobResultStore} from "../../store/JobResultStore";
-
+import * as winston from 'winston'
 
 export interface OrchestratorConfig {
     strategy: DispatchStrategyType,
@@ -48,6 +48,7 @@ export class Orchestrator {
     private _strategy: DispatchStrategy;
     //server
     private _server: OrchestratorServer;
+    private LOGGER = winston.loggers.get('ORCHESTRATOR');
 
 
     constructor(config: OrchestratorConfig) {
@@ -92,7 +93,7 @@ export class Orchestrator {
     }
 
     schedule(name: string, params?: any, listener?: JobListener) {
-        console.log('Scheduling..');
+        this.LOGGER.info('info', 'Scheduling..');
         let remote = -1;
         let cycle = 0;
         while (remote === -1 && cycle < this.__workers.length) {
@@ -105,19 +106,19 @@ export class Orchestrator {
         }
         else {
             const worker = this.__workers[remote];
-            console.log('Selected: ', worker);
+            this.LOGGER.info('Selected: ', worker);
             const api = `${worker.address}/worker/schedule`;
             request.post(api, {json: {name: name, params: params}},
                 (error, response, body) => {
                     if (!error && response.statusCode == 200) {
                         let id = response.body.message;
-                        console.log(`Successfully Scheduled ${id} to Node at ${worker.address}`);
+                        this.LOGGER.info(`Successfully Scheduled ${id} to Node at ${worker.address}`);
                         this.pend(id, worker);
                         listener = listener ? listener : null;
                         this._listeners[id] = listener;
-                        console.log(this._pending)
+                        this.LOGGER.debug(' Pending', this._pending)
                     } else {
-                        console.log(`Error Scheduling to Node at ${worker.address}: `, body)
+                        this.LOGGER.error(`Error Scheduling to Node at ${worker.address}: `, body)
                     }
                 })
         }
@@ -128,7 +129,7 @@ export class Orchestrator {
     }
 
     complete(worker: string, job: string, result: any) {
-        console.log(`Job ${job} from remote worker ${worker} finished`);
+        this.LOGGER.info(`Job ${job} from remote worker ${worker} finished`);
         const listener = this._listeners[job];
         listener ? listener.onJobCompleted(result) : null;
         let pending = this._pending[job];
@@ -146,7 +147,7 @@ export class Orchestrator {
     }
 
     error(worker: string, job: string, result: any) {
-        console.log(`Job ${job} from remote worker ${worker} finished with an error`);
+        this.LOGGER.info(`Job ${job} from remote worker ${worker} finished with an error`);
         const listener = this._listeners[job];
         listener ? listener.onJobError(result) : null;
         let pending = this._pending[job];
