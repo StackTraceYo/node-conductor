@@ -48,8 +48,13 @@ export class OrchestratorServer {
             const jobId = req.body.jobId || false;
             const worker = req.body.worker || false;
             const result: any = req.body.result;
+            const isError = req.body.error;
             if (jobId && worker) {
-                this._orch.complete(worker, jobId, result);
+                if (isError) {
+                    this._orch.error(worker, jobId, result);
+                } else {
+                    this._orch.complete(worker, jobId, result);
+                }
                 res.json({message: 'success', id: jobId})
             } else {
                 res.json({message: 'missing one or more values', id: jobId, worker: worker})
@@ -57,8 +62,8 @@ export class OrchestratorServer {
         });
 
         this.router.get('/test', (req, res) => {
-            this._orch.schedule('test');
-            res.json({message: 'ok'})
+            let result = this._orch.schedule('test');
+            res.json(result)
         });
 
         this.router.get('/job/', (req, res) => {

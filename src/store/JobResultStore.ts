@@ -3,7 +3,8 @@ import {JobResult} from "../dispatch/job/Job";
 export interface RemoteJobResult {
     id: string
     worker: string
-    data: any
+    data: any,
+    error?: boolean
 }
 
 

@@ -27,6 +27,21 @@ export class RemoteOrchestrator {
         )
     }
 
+    public disconnect(options: any, cb?, err?) {
+        request.post(`${this._address}/orchestrator/disconnect`, {json: options},
+            (error, response, body) => {
+                if (!error && response.statusCode == 200) {
+                    this._remoteId = response.toJSON().body.id;
+                    console.log(`Successfully disconnected frp, hub at ${this._address}`);
+                    cb ? cb(response, body) : undefined;
+                }
+                else {
+                    err(error, response, body);
+                }
+            }
+        )
+    }
+
     public notifyComplete(response: any, cb?, err?) {
         request.post(`${this._address}/orchestrator/job/complete`, {json: response},
             (error, response, body) => {

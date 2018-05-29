@@ -34,6 +34,13 @@ export class Orchestrator {
         }
     };
 
+    private readonly _errors: {
+        [key: string]: {
+            worker: string,
+            error: any
+        }
+    };
+
     private readonly _jobStore: JobResultStore;
 
     // array of workers
@@ -50,6 +57,7 @@ export class Orchestrator {
         this._pending = {};
         this._completed = {};
         this._listeners = {};
+        this._errors = {};
         this._jobStore = new JobResultStore();
         if (config.startServer) {
             this._server = new OrchestratorServer(this);
@@ -137,6 +145,25 @@ export class Orchestrator {
         }
     }
 
+    error(worker: string, job: string, result: any) {
+        console.log(`Job ${job} from remote worker ${worker} finished with an error`);
+        const listener = this._listeners[job];
+        listener ? listener.onJobError(result) : null;
+        let pending = this._pending[job];
+        if (pending.worker === worker) {
+            delete this._pending[job];
+            this._errors[job] = {worker: worker, error: result};
+            this._jobStore.push(
+                {
+                    id: job,
+                    worker: worker,
+                    data: result,
+                    error: true
+                }
+            );
+        }
+    }
+
     public get all() {
         const pending = _.map(this._pending, (value, key) => {
                 return {
@@ -151,7 +178,7 @@ export class Orchestrator {
                 return {
                     id: key,
                     worker: value.worker,
-                    status: 'done'
+                    status: value.error ? 'error' : 'done'
                 }
             }
         );
@@ -167,13 +194,29 @@ export class Orchestrator {
                 return {
                     id: key,
                     worker: value.worker,
-                    status: 'done'
+                    status: value.error ? 'error' : 'done'
                 }
             }
         );
 
         return {
             jobs: completed
+        }
+    }
+
+    public get errored() {
+
+        const completed = _.map(this._jobStore.jobResults(), (value, key) => {
+                return {
+                    id: key,
+                    worker: value.worker,
+                    status: value.error ? 'error' : 'done'
+                }
+            }
+        );
+
+        return {
+            jobs: _.filter(completed, value => value.status === 'error')
         }
     }
 
@@ -194,9 +237,17 @@ export class Orchestrator {
     public status(id: string) {
         const pending = this._pending[id];
         const res = !pending ? this._completed[id] : pending;
-        return {
-            status: pending ? 'pending' : res ? 'done' : 'unknown',
-            worker: res ? res.worker : 'unknown'
+        const err = this._errors[id];
+        if (err) {
+            return {
+                status: 'error',
+                worker: err.worker
+            }
+        } else {
+            return {
+                status: pending ? 'pending' : res ? 'done' : 'unknown',
+                worker: res ? res.worker : 'unknown'
+            }
         }
     }
 
@@ -210,7 +261,7 @@ export class Orchestrator {
     }
 
     private isComplete(id: string) {
-        return !!this._completed[id];
+        return !!this._completed[id] || !!this._errors[id];
     }
 
     get workers(): { [p: string]: RemoteWorker } {

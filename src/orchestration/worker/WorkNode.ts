@@ -1,6 +1,6 @@
 import {Dispatcher, DispatcherConfig} from "../../dispatch/dispatcher/Dispatcher";
 import {JobStore} from "../../store/JobStore";
-import {Job, JobListener} from "../../dispatch/job/Job";
+import {Job, JobError, JobListener} from "../../dispatch/job/Job";
 import {WorkNodeServer} from "./WorkNodeServer";
 import {RemoteOrchestrator} from "../orchestrator/RemoteOrchestrator";
 
@@ -68,15 +68,30 @@ export class WorkNode {
                     result: arg.data
                 };
                 this._remoteOrchestrator.notifyComplete(response);
+            },
+            onJobError: (arg: JobError ) => {
+                console.log('Job Completed');
+                let response = {
+                    jobId: arg.id,
+                    worker: this._remoteOrchestrator.remoteId,
+                    result: arg.error,
+                    error: true
+                };
+                this._remoteOrchestrator.notifyComplete(response);
             }
         };
-    }
+    };
 
     public get id() {
         return this._id;
     }
 
     public disconnect() {
+        let remote = {
+            address: this.config.address,
+            port: this.config.port
+        };
+        this._remoteOrchestrator.disconnect(remote);
         this._id = undefined;
     }
 }

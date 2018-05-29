@@ -231,4 +231,61 @@ describe('Orchestrator', () => {
         expect(orch.fetch('job-id-5')).to.be.undefined;
     });
 
+    it('should error jobs', () => {
+        const remoteWorker: RemoteWorker = new RemoteWorker(uuid.v4(), 'localhost', ['test']);
+        const remoteWorker2: RemoteWorker = new RemoteWorker(uuid.v4(), 'localhost2', ['test']);
+        const remoteWorker3: RemoteWorker = new RemoteWorker(uuid.v4(), 'localhost3', ['test']);
+        orch.pend('job-id-0', remoteWorker);
+        orch.pend('job-id-1', remoteWorker);
+        orch.pend('job-id-2', remoteWorker2);
+        orch.pend('job-id-3', remoteWorker2);
+        orch.pend('job-id-4', remoteWorker3);
+        orch.pend('job-id-5', remoteWorker3);
+
+        expect(orch.pending.jobs.length).to.equal(6);
+        expect(orch.all.jobs.length).to.equal(6);
+
+        orch.error(remoteWorker.id, 'job-id-0', 'exception-0');
+        orch.error(remoteWorker.id, 'job-id-1', 'exception-1');
+        orch.error(remoteWorker2.id, 'job-id-2', 'exception-2');
+        orch.error(remoteWorker2.id, 'job-id-3', 'exception-3');
+        orch.error(remoteWorker3.id, 'job-id-4', 'exception-4');
+        orch.error(remoteWorker3.id, 'job-id-5', 'exception-5');
+
+        expect(orch.pending.jobs.length).to.equal(0);
+        expect(orch.all.jobs.length).to.equal(6);
+        expect(orch.completed.jobs.length).to.equal(6);
+        expect(orch.errored.jobs.length).to.equal(6);
+
+        _.forEach(orch.completed.jobs, value => {
+            expect(value.status).to.equal('error');
+
+            let status = orch.status(value.id);
+            expect(status.worker).to.equal(value.worker);
+            expect(status.status).to.equal(value.status);
+        });
+
+        _.forEach(orch.errored.jobs, value => {
+            expect(value.status).to.equal('error');
+
+            let status = orch.status(value.id);
+            expect(status.worker).to.equal(value.worker);
+            expect(status.status).to.equal(value.status);
+        });
+
+        _.forEach(orch.all.jobs, value => {
+            expect(value.status).to.equal('error');
+
+            let status = orch.status(value.id);
+            expect(status.worker).to.equal(value.worker);
+            expect(status.status).to.equal(value.status);
+        });
+
+        expect(orch.fetch('job-id-0').data).to.be.equal('exception-0');
+        expect(orch.fetch('job-id-1').data).to.be.equal('exception-1');
+        expect(orch.fetch('job-id-2').data).to.be.equal('exception-2');
+
+    });
+
+
 });
