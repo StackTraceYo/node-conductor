@@ -1,9 +1,9 @@
 import * as _ from "lodash";
 import {v4 as uuid} from "uuid";
 import * as winston from "winston";
-import {JobResultStore} from "../../store/JobResultStore";
+import {JobResult, JobResultStore} from "../../store/JobResultStore";
 import {Queue} from "../../util/queue/Queue";
-import {END, ERROR, EXEC, Job, JobListener, JobResult, START} from "../job/Job";
+import {END, ERROR, EXEC, Job, JobListener, START} from "../job/Job";
 import Timer = NodeJS.Timer;
 
 
@@ -50,7 +50,7 @@ export class Dispatcher {
     private _idle: boolean;
     private _idleCycles: number;
     private _timeoutHandle: Timer;
-    private _store = new JobResultStore();
+    private _store = new JobResultStore<JobResult>();
     private LOGGER = winston.loggers.get("DISPATCHER");
 
     constructor(config?: DispatcherConfig) {

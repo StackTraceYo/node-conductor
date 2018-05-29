@@ -1,15 +1,10 @@
-import { EventEmitter } from "events";
+import {EventEmitter} from "events";
+import {JobResult} from "../../store/JobResultStore";
 
 export const START = `[Job] Start`;
 export const EXEC = `[Job] Executing`;
 export const END = `[Job] End`;
 export const ERROR = `[Job] Error`;
-
-export interface JobResult {
-    id: string;
-    name: string;
-    data: any;
-}
 
 export interface JobError {
     id: string;
@@ -55,7 +50,7 @@ export abstract class Job<T> extends EventEmitter {
 
     private async run(): Promise<JobResult> {
         let data = await this.execute().catch(error =>
-            this.emit(ERROR, { error: error, id: this._id })
+            this.emit(ERROR, {error: error, id: this._id})
         );
         return {
             id: this._id,

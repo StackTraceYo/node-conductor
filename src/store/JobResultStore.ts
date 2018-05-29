@@ -1,18 +1,25 @@
-export interface RemoteJobResult {
-    id: string;
+export interface RemoteJobResult extends Result {
     worker: string;
-    data: any;
     error?: boolean;
 }
 
-export class JobResultStore {
-    private readonly _finishedData: { [key: string]: RemoteJobResult };
+export interface JobResult extends Result {
+    name: string;
+}
+
+export interface Result {
+    id: string,
+    data: any
+}
+
+export class JobResultStore<T extends Result> {
+    private readonly _finishedData: { [key: string]: T };
 
     constructor() {
         this._finishedData = {};
     }
 
-    public push(result: RemoteJobResult) {
+    public push(result: T) {
         this._finishedData[result.id] = result;
     }
 

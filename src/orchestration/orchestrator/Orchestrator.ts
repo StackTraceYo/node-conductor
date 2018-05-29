@@ -2,7 +2,7 @@ import * as _ from "lodash";
 import * as request from "request";
 import * as winston from "winston";
 import {JobListener} from "../../dispatch/job/Job";
-import {JobResultStore} from "../../store/JobResultStore";
+import {JobResultStore, RemoteJobResult} from "../../store/JobResultStore";
 import {DispatchStrategy, DispatchStrategyType} from "../strategy/DispatchStrategy";
 import {RemoteWorker} from "../worker/RemoteWorker";
 import {OrchestratorServer} from "./OrchestratorServer";
@@ -40,7 +40,7 @@ export class Orchestrator {
         };
     };
 
-    private readonly _jobStore: JobResultStore;
+    private readonly _jobStore: JobResultStore<RemoteJobResult>;
 
     // array of workers
     private __workers: RemoteWorker[];
@@ -57,7 +57,7 @@ export class Orchestrator {
         this._completed = {};
         this._listeners = {};
         this._errors = {};
-        this._jobStore = new JobResultStore();
+        this._jobStore = new JobResultStore<RemoteJobResult>();
         if (config.startServer) {
             this._server = new OrchestratorServer(this);
         }
@@ -276,7 +276,7 @@ export class Orchestrator {
         return this._listeners;
     }
 
-    get jobStore(): JobResultStore {
+    get jobStore(): JobResultStore<RemoteJobResult> {
         return this._jobStore;
     }
 
