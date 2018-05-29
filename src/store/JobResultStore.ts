@@ -1,16 +1,12 @@
-import {JobResult} from "../dispatch/job/Job";
-
 export interface RemoteJobResult {
-    id: string
-    worker: string
-    data: any,
-    error?: boolean
+    id: string;
+    worker: string;
+    data: any;
+    error?: boolean;
 }
 
-
 export class JobResultStore {
-
-    private readonly _finishedData: { [key: string]: RemoteJobResult; };
+    private readonly _finishedData: { [key: string]: RemoteJobResult };
 
     constructor() {
         this._finishedData = {};
@@ -26,7 +22,9 @@ export class JobResultStore {
 
     public get(id: string) {
         const res = this._finishedData[id];
-        res ? delete this._finishedData[id] : res;
+        if (res) {
+            delete this._finishedData[id];
+        }
         return res;
     }
 

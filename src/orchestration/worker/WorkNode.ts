@@ -1,19 +1,21 @@
-import {Dispatcher, DispatcherConfig} from "../../dispatch/dispatcher/Dispatcher";
-import {JobStore} from "../../store/JobStore";
-import {Job, JobError, JobListener} from "../../dispatch/job/Job";
-import {WorkNodeServer} from "./WorkNodeServer";
-import {RemoteOrchestrator} from "../orchestrator/RemoteOrchestrator";
+import {
+    Dispatcher,
+    DispatcherConfig
+} from "../../dispatch/dispatcher/Dispatcher";
+import { Job, JobError, JobListener } from "../../dispatch/job/Job";
+import { JobStore } from "../../store/JobStore";
+import { RemoteOrchestrator } from "../orchestrator/RemoteOrchestrator";
+import { WorkNodeServer } from "./WorkNodeServer";
 
 export interface WorkNodeConfig {
-    jobstore: JobStore,
-    dispatchConfig?: DispatcherConfig,
-    orchestratorAddress: string,
-    address?: string
-    port?: string
+    jobstore: JobStore;
+    dispatchConfig?: DispatcherConfig;
+    orchestratorAddress: string;
+    address?: string;
+    port?: string;
 }
 
 export class WorkNode {
-
     // job result data
     private _jobStore: JobStore;
     // job dispatcher
@@ -31,8 +33,8 @@ export class WorkNode {
         this._orchAddress = config.orchestratorAddress;
         this._jobStore = config.jobstore;
         this._dispatcher = new Dispatcher(config.dispatchConfig);
-        this._server = new WorkNodeServer(this, {port: config.port});
-        let remote = {
+        this._server = new WorkNodeServer(this, { port: config.port });
+        const remote = {
             jobs: this._jobStore.jobs,
             address: config.address,
             port: config.port
@@ -42,36 +44,42 @@ export class WorkNode {
     }
 
     private connectToOrchestrator(data: any) {
-        this._remoteOrchestrator.connect(data, (r, b) => {
-            this._id = r.toJSON().body.id;
-        });
+        this._remoteOrchestrator.connect(
+            data,
+            (r, b) => {
+                this._id = r.toJSON().body.id;
+            }
+        );
     }
 
     public schedule(name: string, params?: any) {
-        let exists = this._jobStore.jobs.indexOf(name);
+        const exists = this._jobStore.jobs.indexOf(name);
         if (exists > -1) {
-            let job: Job<any> = this._jobStore.createFromName(name, params);
-            const id = this._dispatcher.schedule(job, this.jobCompletedListener());
+            const job: Job<any> = this._jobStore.createFromName(name, params);
+            const id = this._dispatcher.schedule(
+                job,
+                this.jobCompletedListener()
+            );
             return id;
         } else {
-            return 'no job found'
+            return "no job found";
         }
     }
 
     private jobCompletedListener: () => JobListener = () => {
         return {
             onJobCompleted: arg => {
-                console.log('Job Completed');
-                let response = {
+                console.log("Job Completed");
+                const response = {
                     jobId: arg.id,
                     worker: this._remoteOrchestrator.remoteId,
                     result: arg.data
                 };
                 this._remoteOrchestrator.notifyComplete(response);
             },
-            onJobError: (arg: JobError ) => {
-                console.log('Job Completed');
-                let response = {
+            onJobError: (arg: JobError) => {
+                console.log("Job Completed");
+                const response = {
                     jobId: arg.id,
                     worker: this._remoteOrchestrator.remoteId,
                     result: arg.error,
@@ -87,7 +95,7 @@ export class WorkNode {
     }
 
     public disconnect() {
-        let remote = {
+        const remote = {
             address: this.config.address,
             port: this.config.port
         };

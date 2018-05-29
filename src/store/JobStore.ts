@@ -1,12 +1,11 @@
 import * as _ from "lodash";
 
 interface JobStoreConfig {
-    jobs: { [key: string]: any; }
+    jobs: { [key: string]: any };
 }
 
 export class JobStore {
-
-    private readonly _jobs: { [key: string]: any; };
+    private readonly _jobs: { [key: string]: any };
     private readonly _jobnames: string[];
 
     constructor(config: JobStoreConfig) {
@@ -14,7 +13,7 @@ export class JobStore {
         this._jobnames = [];
         _.forEach(this._jobs, (value, key) => {
             this.register(key, value);
-        })
+        });
     }
 
     public createFromName<T>(name: string, params?: any): T {
@@ -29,7 +28,11 @@ export class JobStore {
         this._jobnames.push(name);
     }
 
-    private create<T>(name: string, type: (new (name, params?) => T), params: any): T {
+    private create<T>(
+        name: string,
+        type: new (name, params?) => T,
+        params: any
+    ): T {
         return new type(name, params);
     }
 

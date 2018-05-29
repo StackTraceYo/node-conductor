@@ -1,4 +1,4 @@
-import {EventEmitter} from "events";
+import { EventEmitter } from "events";
 
 export const START = `[Job] Start`;
 export const EXEC = `[Job] Executing`;
@@ -6,14 +6,14 @@ export const END = `[Job] End`;
 export const ERROR = `[Job] Error`;
 
 export interface JobResult {
-    id: string
-    name: string
-    data: any
+    id: string;
+    name: string;
+    data: any;
 }
 
 export interface JobError {
-    id: string
-    error: any
+    id: string;
+    error: any;
 }
 
 export type Listener = (arg: JobResult) => void;
@@ -27,7 +27,6 @@ export interface JobListener {
 }
 
 export abstract class Job<T> extends EventEmitter {
-
     private _running: boolean;
     private _completed: boolean;
     private _result: T;
@@ -55,10 +54,9 @@ export abstract class Job<T> extends EventEmitter {
     }
 
     private async run(): Promise<JobResult> {
-        let data = await this.execute()
-            .catch((error) =>
-                this.emit(ERROR, {error: error, id: this._id})
-            );
+        let data = await this.execute().catch(error =>
+            this.emit(ERROR, { error: error, id: this._id })
+        );
         return {
             id: this._id,
             name: this._name,
@@ -66,7 +64,5 @@ export abstract class Job<T> extends EventEmitter {
         };
     }
 
-    async abstract execute(): Promise<T> ;
-
-
+    abstract async execute(): Promise<T>;
 }

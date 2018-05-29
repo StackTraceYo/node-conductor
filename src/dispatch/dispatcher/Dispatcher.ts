@@ -1,11 +1,13 @@
+import * as _ from "lodash";
+import {v4 as uuid} from "uuid";
+import * as winston from "winston";
+import {JobResultStore} from "../../store/JobResultStore";
 import {Queue} from "../../util/queue/Queue";
 import {END, ERROR, EXEC, Job, JobListener, JobResult, START} from "../job/Job";
-import {v4 as uuid} from 'uuid';
-import {JobResultStore} from "../../store/JobResultStore";
-import _ = require("lodash");
 import Timer = NodeJS.Timer;
 
-type NamedJob = [string, Job<any>]
+
+type NamedJob = [string, Job<any>];
 
 export enum JobStatus {
     Queued,
@@ -18,9 +20,9 @@ export enum JobStatus {
 }
 
 export interface DispatcherConfig {
-    concurrent?: number,
-    cycle?: number
-    idleCycle?: number,
+    concurrent?: number;
+    cycle?: number;
+    idleCycle?: number;
     idleCycleCount?: number;
     manualMode?: boolean;
 }
@@ -34,10 +36,9 @@ const defaultConfig: DispatcherConfig = {
 };
 
 export class Dispatcher {
-
-    private readonly _running: { [key: string]: Job<any>; };
+    private readonly _running: { [key: string]: Job<any> };
     private readonly _completed: string[];
-    private readonly _listeners: { [key: string]: JobListener; };
+    private readonly _listeners: { [key: string]: JobListener };
     private readonly _maxConcurrent: number;
     private readonly _cycleTime: number;
     private readonly _idleCycleTime: number;
@@ -50,6 +51,7 @@ export class Dispatcher {
     private _idleCycles: number;
     private _timeoutHandle: Timer;
     private _store = new JobResultStore();
+    private LOGGER = winston.loggers.get("DISPATCHER");
 
     constructor(config?: DispatcherConfig) {
         this._jobQueue = new Queue<NamedJob>();
@@ -59,8 +61,7 @@ export class Dispatcher {
         this._running = {};
         this._listeners = {};
         this._completed = [];
-        let configuration = {...defaultConfig, ...config};
-        console.log(configuration);
+        const configuration = {...defaultConfig, ...config};
         this._maxConcurrent = configuration.concurrent;
         this._cycleTime = configuration.cycle;
         this._idleCycleTime = configuration.idleCycle;
@@ -90,53 +91,25 @@ export class Dispatcher {
             return "Unable to Attach To Completed Job";
         } else {
             if (this._listeners[id]) {
-                return "Listener Already Bound"
+                return "Listener Already Bound";
             } else {
                 this._listeners[id] = listener;
             }
         }
     }
 
-    private cycle() {
-        if (!this._cycleOff) {
-            console.log("Checking..");
-            if (this.jobsQueued() > 0) {
-                console.log("Queued..");
-                let slotsRemaining = this._maxConcurrent - this._numberRunning;
-                while (slotsRemaining > 0) {
-                    // consume
-                    let consumed = this.consume();
-                    slotsRemaining--;
-                }
-                this._timeoutHandle = setTimeout(() => this.cycle(), this._cycleTime);
-            }
-            else if (this._idle) {
-                console.log("Idle..");
-                this._timeoutHandle = setTimeout(() => this.cycle(), this._idleCycleTime);
-            }
-            else {
-                console.log(`No jobs Queued.. ${this._idleCycles}`);
-                this._idleCycles += 1;
-                if (this._idleCycles >= this._idleCycleCount) {
-                    console.log("Idling..");
-                    this._idle = true;
-                    this._timeoutHandle = setTimeout(() => this.cycle(), this._idleCycleTime);
-                } else {
-                    this._timeoutHandle = setTimeout(() => this.cycle(), this._cycleTime);
-                }
-            }
-        }
-    }
-
     public consume() {
-        console.log(`Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`)
-        let queued: NamedJob = this._jobQueue.dequeue();
-        if (queued) { //if queue has something
-            const id = queued[0]; //job id
-            const job = queued[1]; //job
-            this.bind(id, job); //bind event listeners
+        this.LOGGER.info(
+            `Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`
+        );
+        const queued: NamedJob = this._jobQueue.dequeue();
+        if (queued) {
+            // if queue has something
+            const id = queued[0]; // job id
+            const job = queued[1]; // job
+            this.bind(id, job); // bind event listeners
             this._running[id] = job;
-            return job.start(id); //start
+            return job.start(id); // start
         }
     }
 
@@ -150,19 +123,63 @@ export class Dispatcher {
 
     public getStatus(id: string): JobStatus {
         if (this.isComplete(id)) {
-            return JobStatus.Completed
+            return JobStatus.Completed;
         } else if (this.isRunning(id)) {
-            return JobStatus.Running
-        }
-        else if (this.isQueued(id)) {
-            return JobStatus.Queued
+            return JobStatus.Running;
+        } else if (this.isQueued(id)) {
+            return JobStatus.Queued;
         } else {
-            return JobStatus.Unknown
+            return JobStatus.Unknown;
+        }
+    }
+
+    public fetch(id: string) {
+        return this.isComplete(id) ? this._store.fetch(id) : undefined;
+    }
+
+    public clean(id: string) {
+        delete this._completed[id];
+        delete this._listeners[id];
+    }
+
+    private cycle() {
+        if (!this._cycleOff) {
+            if (this.jobsQueued() > 0) {
+                let slotsRemaining = this._maxConcurrent - this._numberRunning;
+                while (slotsRemaining > 0) {
+                    // consume
+                    const consumed = this.consume();
+                    slotsRemaining--;
+                }
+                this._timeoutHandle = setTimeout(
+                    () => this.cycle(),
+                    this._cycleTime
+                );
+            } else if (this._idle) {
+                this._timeoutHandle = setTimeout(
+                    () => this.cycle(),
+                    this._idleCycleTime
+                );
+            } else {
+                this._idleCycles += 1;
+                if (this._idleCycles >= this._idleCycleCount) {
+                    this._idle = true;
+                    this._timeoutHandle = setTimeout(
+                        () => this.cycle(),
+                        this._idleCycleTime
+                    );
+                } else {
+                    this._timeoutHandle = setTimeout(
+                        () => this.cycle(),
+                        this._cycleTime
+                    );
+                }
+            }
         }
     }
 
     private isComplete(id: string) {
-        return _.includes(this._completed, id)
+        return _.includes(this._completed, id);
     }
 
     private isRunning(id: string) {
@@ -170,10 +187,12 @@ export class Dispatcher {
     }
 
     private isQueued(id: string) {
-        return (!this.isRunning(id) //not running
-            && !this.isComplete(id) //not complete
-            //listener is defined  or null means key exists
-            && (this._listeners[id] || this._listeners[id] === null))
+        return (
+            !this.isRunning(id) && // not running
+            !this.isComplete(id) && // not complete
+            // listener is defined  or null means key exists
+            (this._listeners[id] || this._listeners[id] === null)
+        );
     }
 
     private bind(id: string, job: Job<any>) {
@@ -198,33 +217,26 @@ export class Dispatcher {
     }
 
     private startListener = (job: string) => {
-        console.log(`Job ${job} Was Started`);
+        this.LOGGER.info(`Job ${job} Was Started`);
         this._numberRunning++;
     };
 
-    private errorListener = (error) => {
-        console.log(`Job ${error.id} Failed`);
-        console.log(`${error.error}`);
+    private errorListener = error => {
+        this.LOGGER.info(`Job ${error.id} Failed`);
+        this.LOGGER.info(`${error.error}`);
         this._numberRunning--;
     };
 
     private endListener = (returnValue: JobResult) => {
-        console.log(`Job ${returnValue.id} Finished`);
+        this.LOGGER.info(`Job ${returnValue.id} Finished`);
         this._numberRunning--;
-        //set value to completed
+        // set value to completed
         this._completed.push(returnValue.id);
         this._store.push(returnValue);
-        //remove from running
+        // remove from running
         delete this._running[returnValue.id];
-        console.log(`Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`)
+        this.LOGGER.info(
+            `Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`
+        );
     };
-
-    public fetch(id: string) {
-        return this.isComplete(id) ? this._store.fetch(id) : undefined;
-    }
-
-    public clean(id: string) {
-        delete this._completed[id];
-        delete this._listeners[id];
-    }
 }
