@@ -1,5 +1,4 @@
 export class Queue<T> {
-
     private _queued: T[] = [];
 
     public enqueue(val: T) {
