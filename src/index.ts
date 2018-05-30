@@ -10,3 +10,4 @@ export * from "./orchestration/strategy/DispatchStrategy";
 export * from "./store/JobResultStore";
 export * from "./store/JobStore";
 export * from "./util/queue/Queue";
+export * from "./client/ConductorClient"
