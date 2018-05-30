@@ -47,4 +47,3 @@ class Job extends events_1.EventEmitter {
     }
 }
 exports.Job = Job;
-//# sourceMappingURL=Job.js.map

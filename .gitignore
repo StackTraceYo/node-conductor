@@ -44,7 +44,7 @@ typings/
 
 # Optional eslint cache
 .eslintcache
-
+K
 # Optional REPL history
 .node_repl_history
 
@@ -57,3 +57,5 @@ typings/
 # dotenv environment variables file
 .env
 .idea/
+
+/dist

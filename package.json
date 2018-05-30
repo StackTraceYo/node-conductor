@@ -1,6 +1,6 @@
 {
   "name": "node-conductor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "author": "Ahmad Farag",
   "private": false,
   "scripts": {
@@ -14,9 +14,11 @@
     "start:test-worker": "ts-node ./tests/Remote.ts"
   },
   "repository": "https://github.com/stacktraceyo/node-conductor",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
   "files": [
-    "dist",
-    "src"
+    "dist/"
   ],
   "devDependencies": {
     "@types/chai": "^4.1.2",

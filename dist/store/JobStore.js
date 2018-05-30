@@ -27,4 +27,3 @@ class JobStore {
     }
 }
 exports.JobStore = JobStore;
-//# sourceMappingURL=JobStore.js.map

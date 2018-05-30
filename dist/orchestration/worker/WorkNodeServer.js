@@ -36,4 +36,3 @@ class WorkNodeServer {
     }
 }
 exports.WorkNodeServer = WorkNodeServer;
-//# sourceMappingURL=WorkNodeServer.js.map

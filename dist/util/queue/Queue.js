@@ -21,4 +21,3 @@ class Queue {
     }
 }
 exports.Queue = Queue;
-//# sourceMappingURL=Queue.js.map

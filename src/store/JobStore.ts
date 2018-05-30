@@ -1,6 +1,6 @@
 import * as _ from "lodash";
 
-interface JobStoreConfig {
+export interface JobStoreConfig {
     jobs: { [key: string]: any };
 }
 

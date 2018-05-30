@@ -17,4 +17,3 @@ class RemoteWorker {
     }
 }
 exports.RemoteWorker = RemoteWorker;
-//# sourceMappingURL=RemoteWorker.js.map

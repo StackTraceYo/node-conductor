@@ -70,4 +70,3 @@ class WorkNode {
     }
 }
 exports.WorkNode = WorkNode;
-//# sourceMappingURL=WorkNode.js.map
