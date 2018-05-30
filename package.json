@@ -1,5 +1,5 @@
 {
-  "name": "node-conductor",
+  "name": "nodejs-conductor",
   "version": "0.1.1",
   "author": "Ahmad Farag",
   "private": false,
@@ -36,10 +36,8 @@
     "sinon": "^4.4.2",
     "mocha-clean": "^1.0.0",
     "prettier": "^1.11.1",
-    "ts-node": "^5.0.0",
     "ts-lint": "^4.5.1",
     "tslint-config-prettier": "^1.10.0",
-    "typescript": "^2.5.3",
     "rimraf": "^2.6.2"
   },
   "dependencies": {

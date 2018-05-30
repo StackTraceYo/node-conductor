@@ -62,9 +62,8 @@ class OrchestratorServer {
                 });
             }
         });
-        this.router.get("/test", (req, res) => {
-            const result = this._orch.schedule("test");
-            res.json(result);
+        this.router.get("/health", (req, res) => {
+            res.json({ message: "up" });
         });
         this.router.get("/job/", (req, res) => {
             return res.json(this._orch.all);
