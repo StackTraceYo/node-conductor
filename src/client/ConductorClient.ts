@@ -38,18 +38,15 @@ export class ConductorClient {
 
     constructor(config: ClientConfig) {
         this._config = config;
-        this.add(config.address);
+    }
+
+    public start() {
+        return this.add(this._config.address);
     }
 
     public add(address: string) {
-        if (this._remote.address !== address) {
-            const orch: ClientOrchestrator = generate(address);
-            this.connect(orch);
-        } else {
-            this.LOGGER.info(
-                `${address} already connected`
-            );
-        }
+        const orch: ClientOrchestrator = generate(address);
+        return this.connect(orch);
     }
 
     public remove(address: string) {
@@ -72,8 +69,7 @@ export class ConductorClient {
     }
 
     public health(cb?: RequestCallback) {
-
-        this.get(this._remote.health, this.createCallback(this._remote.health, cb));
+            this.get(this._remote.health, this.createCallback(this._remote.health, cb));
     }
 
     public jobs(cb?: RequestCallback) {
@@ -93,22 +89,39 @@ export class ConductorClient {
     }
 
 
-    private connect(orch: ClientOrchestrator) {
-        this.get(
-            orch.health,
-            this.createCallback(orch.health, (error, response) => {
-                if (!error && response.statusCode === 200) {
-                    this._remote = orch
+    private connect(orch: ClientOrchestrator): Promise<ConductorClient> {
+        return new Promise((resolve, reject) => {
+
+                if (this._remote && this._remote.address !== orch.address) {
+                    this.LOGGER.info(
+                        `${orch.address} already connected`
+                    );
+                    reject(this);
+                } else {
+                    this.get(
+                        orch.health,
+                        this.createCallback(orch.health, (error, response) => {
+                            if (!error && response.statusCode === 200) {
+                                this.LOGGER.info(
+                                    `Adding`
+                                );
+                                this._remote = orch;
+                                resolve(this);
+                            } else {
+                                reject(this);
+                            }
+                        })
+                    );
                 }
-            })
+            }
         );
-    }
+    };
 
     private createCallback(url: string, cb?: RequestCallback) {
         return (error, response, body) => {
             if (!error && response.statusCode === 200) {
                 this.LOGGER.info(
-                    `Successfully Called ${url}, adding`
+                    `Successfully Called ${url}`
                 );
             } else {
                 this.LOGGER.warning(

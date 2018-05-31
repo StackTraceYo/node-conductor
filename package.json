@@ -11,7 +11,8 @@
     "build": "tsc -p .",
     "prepublish": "npm run clean && npm run lint && npm run test && npm run build",
     "start:test-hub": "ts-node ./tests/Hub.ts",
-    "start:test-worker": "ts-node ./tests/Remote.ts"
+    "start:test-worker": "ts-node ./tests/Remote.ts",
+    "start:test-client": "ts-node ./tests/Client.ts"
   },
   "repository": "https://github.com/stacktraceyo/node-conductor",
   "main": "dist/index.js",
