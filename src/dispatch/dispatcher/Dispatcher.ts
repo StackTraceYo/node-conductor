@@ -1,11 +1,10 @@
 import * as _ from "lodash";
-import {v4 as uuid} from "uuid";
+import { v4 as uuid } from "uuid";
 import * as winston from "winston";
-import {JobResult, JobResultStore} from "../../store/JobResultStore";
-import {Queue} from "../../util/queue/Queue";
-import {END, ERROR, EXEC, Job, JobListener, START} from "../job/Job";
+import { JobResult, JobResultStore } from "../../store/JobResultStore";
+import { Queue } from "../../util/queue/Queue";
+import { END, ERROR, EXEC, Job, JobListener, START } from "../job/Job";
 import Timer = NodeJS.Timer;
-
 
 type NamedJob = [string, Job<any>];
 
@@ -61,7 +60,7 @@ export class Dispatcher {
         this._running = {};
         this._listeners = {};
         this._completed = [];
-        const configuration = {...defaultConfig, ...config};
+        const configuration = { ...defaultConfig, ...config };
         this._maxConcurrent = configuration.concurrent;
         this._cycleTime = configuration.cycle;
         this._idleCycleTime = configuration.idleCycle;

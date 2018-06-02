@@ -13,17 +13,17 @@ export class RemoteOrchestrator {
     public connect(options: any, cb?, err?) {
         request.post(
             `${this._address}/orchestrator/register`,
-            {json: options},
+            { json: options },
             (error, response, body) => {
                 if (!error && response.statusCode === 200) {
                     this._remoteId = response.toJSON().body.id;
                     this.LOGGER.info(
                         `Successfully registered to hub at ${
                             this._address
-                            } recieved id: ${this._remoteId}`
+                        } recieved id: ${this._remoteId}`
                     );
                     if (cb) {
-                        cb(response, body)
+                        cb(response, body);
                     }
                 } else {
                     err(error, response, body);
@@ -35,7 +35,7 @@ export class RemoteOrchestrator {
     public disconnect(options: any, cb?, err?) {
         request.post(
             `${this._address}/orchestrator/disconnect`,
-            {json: options},
+            { json: options },
             (error, response, body) => {
                 if (!error && response.statusCode === 200) {
                     this._remoteId = response.toJSON().body.id;
@@ -43,7 +43,7 @@ export class RemoteOrchestrator {
                         `Successfully disconnected frp, hub at ${this._address}`
                     );
                     if (cb) {
-                        cb(response, body)
+                        cb(response, body);
                     }
                 } else {
                     err(error, response, body);
@@ -55,11 +55,11 @@ export class RemoteOrchestrator {
     public notifyComplete(jresponse: any, cb?, err?) {
         request.post(
             `${this._address}/orchestrator/job/complete`,
-            {json: jresponse},
+            { json: jresponse },
             (error, response, body) => {
                 if (!error && response.statusCode === 200) {
                     if (cb) {
-                        cb(response, body)
+                        cb(response, body);
                     }
                 } else {
                     err(error, response, body);

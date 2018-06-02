@@ -8,8 +8,8 @@ export interface JobResult extends Result {
 }
 
 export interface Result {
-    id: string,
-    data: any
+    id: string;
+    data: any;
 }
 
 export class JobResultStore<T extends Result> {

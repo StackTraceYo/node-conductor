@@ -5,18 +5,18 @@ import {ConnectionResponse, JobReport, JobResultResponse} from "..";
 import {JobStatus} from "../orchestration/orchestrator/Orchestrator";
 
 export interface ClientOrchestrator {
-    address: string,
-    health: string,
-    jobs: string,
-    done: string,
-    pending: string,
-    status: (id: string) => string,
-    result: (id: string) => string,
-    check: (id: string) => string
+    address: string;
+    health: string;
+    jobs: string;
+    done: string;
+    pending: string;
+    status: (id: string) => string;
+    result: (id: string) => string;
+    check: (id: string) => string;
 }
 
 export interface ClientConfig {
-    address: string
+    address: string;
 }
 
 const generate = (address: string) => {
@@ -29,11 +29,10 @@ const generate = (address: string) => {
         pending: `${address}/orchestrator/job/pending`,
         result: (job: string) => `${address}/orchestrator/job/${job}/result`,
         status: (job: string) => `${address}/orchestrator/job/${job}`
-    }
+    };
 };
 
 export class ConductorClient {
-
     private readonly LOGGER = winston.loggers.get("ConductorClient");
     private readonly _config: ClientConfig;
     private _remote: ClientOrchestrator;
@@ -53,9 +52,7 @@ export class ConductorClient {
     }
 
     public remove(address: string) {
-        this.LOGGER.info(
-            `Removing ${address}`
-        );
+        this.LOGGER.info(`Removing ${address}`);
         this._remote = null;
     }
 
@@ -63,50 +60,74 @@ export class ConductorClient {
         return !!this._remote;
     }
 
-    public async check(id: string, cb?: RequestCallback): Promise<JobResultResponse> {
-        return await this.get<JobResultResponse>(this._remote.check(id), this.createCallback(this._remote.check(id), cb));
+    public async check(
+        id: string,
+        cb?: RequestCallback
+    ): Promise<JobResultResponse> {
+        return await this.get<JobResultResponse>(
+            this._remote.check(id),
+            this.createCallback(this._remote.check(id), cb)
+        );
     }
 
     public async done(cb?: RequestCallback): Promise<JobReport> {
-        return await this.get<JobReport>(this._remote.done, this.createCallback(this._remote.done, cb));
+        return await this.get<JobReport>(
+            this._remote.done,
+            this.createCallback(this._remote.done, cb)
+        );
     }
 
     public async health(cb?: RequestCallback): Promise<ConnectionResponse> {
-        return await this.get<ConnectionResponse>(this._remote.health, this.createCallback(this._remote.health, cb));
+        return await this.get<ConnectionResponse>(
+            this._remote.health,
+            this.createCallback(this._remote.health, cb)
+        );
     }
 
     public async jobs(cb?: RequestCallback): Promise<JobReport> {
-        return await this.get<JobReport>(this._remote.jobs, this.createCallback(this._remote.jobs, cb));
+        return await this.get<JobReport>(
+            this._remote.jobs,
+            this.createCallback(this._remote.jobs, cb)
+        );
     }
 
     public async pending(cb?: RequestCallback): Promise<JobReport> {
-        return await this.get<JobReport>(this._remote.pending, this.createCallback(this._remote.pending, cb));
+        return await this.get<JobReport>(
+            this._remote.pending,
+            this.createCallback(this._remote.pending, cb)
+        );
     }
 
-    public async result(id: string, cb?: RequestCallback): Promise<JobResultResponse> {
-        return await this.get<JobResultResponse>(this._remote.result(id), this.createCallback(this._remote.result(id), cb));
+    public async result(
+        id: string,
+        cb?: RequestCallback
+    ): Promise<JobResultResponse> {
+        return await this.get<JobResultResponse>(
+            this._remote.result(id),
+            this.createCallback(this._remote.result(id), cb)
+        );
     }
 
     public async status(id: string, cb?: RequestCallback): Promise<JobStatus> {
-        return await this.get<JobStatus>(this._remote.status(id), this.createCallback(this._remote.status(id), cb));
+        return await this.get<JobStatus>(
+            this._remote.status(id),
+            this.createCallback(this._remote.status(id), cb)
+        );
     }
 
-
-    private async connect(orch: ClientOrchestrator): Promise<ConnectionResponse> {
+    private async connect(
+        orch: ClientOrchestrator
+    ): Promise<ConnectionResponse> {
         if (this._remote && this._remote.address !== orch.address) {
-            this.LOGGER.info(
-                `${orch.address} already connected`
-            );
-            return {message: "up"}
+            this.LOGGER.info(`${orch.address} already connected`);
+            return {message: "up"};
         } else {
             return await this.get<ConnectionResponse>(
                 orch.health,
                 this.createCallback(orch.health, (error, response) => {
                     if (!error && response.statusCode === 200) {
                         this._remote = orch;
-                        this.LOGGER.info(
-                            `Added`
-                        );
+                        this.LOGGER.info(`Added`);
                     }
                 })
             );
@@ -116,35 +137,21 @@ export class ConductorClient {
     private createCallback(url: string, cb?: RequestCallback) {
         return (error, response, body) => {
             if (!error && response.statusCode === 200) {
-                this.LOGGER.info(
-                    `Successfully Called ${url}`
-                );
+                this.LOGGER.info(`Successfully Called ${url}`);
             } else {
-                this.LOGGER.warn(
-                    `Failed to Find Orchestrator at ${url}`
-                );
+                this.LOGGER.warn(`Failed to Find Orchestrator at ${url}`);
             }
             if (cb) {
                 cb(error, response, body);
             }
-        }
+        };
     }
 
     private async get<T>(url: string, cb: RequestCallback): Promise<T> {
-        let res = await request.get(
-            url,
-            cb
-        );
-        return res;
+        return await request.get(url, cb);
     }
 
     private async post<T>(url: string, data: any, cb: RequestCallback) {
-        const res = await request.post(
-            url,
-            {json: data},
-            cb
-        );
-
-        return res;
+        return await request.post(url, {json: data}, cb);
     }
 }

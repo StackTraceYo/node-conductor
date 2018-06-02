@@ -1,17 +1,16 @@
-import {RemoteWorker} from "../worker/RemoteWorker";
+import { RemoteWorker } from "../worker/RemoteWorker";
 
 export enum DispatchStrategyType {
     ROUND_ROBIN
 }
 
 export abstract class DispatchStrategy {
-
     public static createFromType(type: DispatchStrategyType) {
         switch (type) {
             case DispatchStrategyType.ROUND_ROBIN:
                 return new RoundRobinDispatchStrategy();
             default:
-                return undefined
+                return undefined;
         }
     }
 
