@@ -16,14 +16,14 @@ export interface OrchestratorConfig {
     startServer: boolean;
 }
 
-export interface JobStatus {
+export interface RemoteJobStatus {
     id?: string;
     status: string;
     worker: string;
 }
 
 export interface JobReport {
-    jobs: JobStatus[];
+    jobs: RemoteJobStatus[];
 }
 
 export class Orchestrator {
@@ -253,7 +253,7 @@ export class Orchestrator {
         };
     }
 
-    public status(id: string): JobStatus {
+    public status(id: string): RemoteJobStatus {
         const pending = this._pending[id];
         const res = !pending ? this._completed[id] : pending;
         const err = this._errors[id];

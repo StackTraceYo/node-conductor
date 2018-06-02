@@ -1,8 +1,12 @@
-import {RequestCallback} from "request";
+import { RequestCallback } from "request";
 import * as request from "request-promise";
 import * as winston from "winston";
-import {ConnectionResponse, JobReport, JobResultResponse} from "..";
-import {JobStatus} from "../orchestration/orchestrator/Orchestrator";
+import {
+    ConnectionResponse,
+    JobReport,
+    JobResultResponse,
+    RemoteJobStatus
+} from "..";
 
 export interface ClientOrchestrator {
     address: string;
@@ -108,8 +112,11 @@ export class ConductorClient {
         );
     }
 
-    public async status(id: string, cb?: RequestCallback): Promise<JobStatus> {
-        return await this.get<JobStatus>(
+    public async status(
+        id: string,
+        cb?: RequestCallback
+    ): Promise<RemoteJobStatus> {
+        return await this.get<RemoteJobStatus>(
             this._remote.status(id),
             this.createCallback(this._remote.status(id), cb)
         );
@@ -120,7 +127,7 @@ export class ConductorClient {
     ): Promise<ConnectionResponse> {
         if (this._remote && this._remote.address !== orch.address) {
             this.LOGGER.info(`${orch.address} already connected`);
-            return {message: "up"};
+            return { message: "up" };
         } else {
             return await this.get<ConnectionResponse>(
                 orch.health,
@@ -152,6 +159,6 @@ export class ConductorClient {
     }
 
     private async post<T>(url: string, data: any, cb: RequestCallback) {
-        return await request.post(url, {json: data}, cb);
+        return await request.post(url, { json: data }, cb);
     }
 }

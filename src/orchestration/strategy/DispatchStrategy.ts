@@ -1,4 +1,4 @@
-import { RemoteWorker } from "../worker/RemoteWorker";
+import { RemoteWorker } from "../..";
 
 export enum DispatchStrategyType {
     ROUND_ROBIN

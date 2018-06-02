@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { JobResult } from "../../store/JobResultStore";
+import { JobResult } from "../..";
 
 export const START = `[Job] Start`;
 export const EXEC = `[Job] Executing`;

@@ -1,9 +1,17 @@
 import * as _ from "lodash";
 import { v4 as uuid } from "uuid";
 import * as winston from "winston";
-import { JobResult, JobResultStore } from "../../store/JobResultStore";
-import { Queue } from "../../util/queue/Queue";
-import { END, ERROR, EXEC, Job, JobListener, START } from "../job/Job";
+import {
+    END,
+    ERROR,
+    EXEC,
+    Job,
+    JobListener,
+    JobResult,
+    JobResultStore,
+    Queue,
+    START
+} from "../..";
 import Timer = NodeJS.Timer;
 
 type NamedJob = [string, Job<any>];
