@@ -2,8 +2,24 @@ import * as bodyparser from "body-parser";
 import * as express from "express";
 import * as http from "http";
 import * as uuid from "uuid";
-import {RemoteWorker} from "../worker/RemoteWorker";
+import {JobResult, RemoteWorker} from "../..";
 import {Orchestrator} from "./Orchestrator";
+
+export interface ConnectionResponse {
+    message: string,
+    id?: string
+}
+
+export interface JobResponse {
+    message: string,
+    id?: string,
+    worker?: string
+}
+
+export interface JobResultResponse {
+    data: JobResult,
+    message: string
+}
 
 export class OrchestratorServer {
     private app = express();
@@ -34,6 +50,8 @@ export class OrchestratorServer {
                 );
                 this._orch.register(remoteWorker.id, remoteWorker);
                 res.json({message: "success", id: remoteWorker.id});
+            } else {
+                res.json({message: "false"});
             }
         });
 

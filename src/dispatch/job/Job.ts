@@ -60,4 +60,12 @@ export abstract class Job<T> extends EventEmitter {
     }
 
     abstract async execute(): Promise<T>;
+
+    async preRun() {
+        return
+    };
+
+    async postRun() {
+        return
+    };
 }

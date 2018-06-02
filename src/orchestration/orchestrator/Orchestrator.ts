@@ -1,15 +1,29 @@
 import * as _ from "lodash";
 import * as request from "request";
 import * as winston from "winston";
-import {JobListener} from "../../dispatch/job/Job";
-import {JobResultStore, RemoteJobResult} from "../../store/JobResultStore";
-import {DispatchStrategy, DispatchStrategyType} from "../strategy/DispatchStrategy";
-import {RemoteWorker} from "../worker/RemoteWorker";
+import {
+    DispatchStrategy,
+    DispatchStrategyType,
+    JobListener,
+    JobResultStore,
+    RemoteJobResult,
+    RemoteWorker
+} from "../..";
 import {OrchestratorServer} from "./OrchestratorServer";
 
 export interface OrchestratorConfig {
     strategy: DispatchStrategyType;
     startServer: boolean;
+}
+
+export interface JobStatus {
+    id?: string,
+    status: string,
+    worker: string
+}
+
+export interface JobReport {
+    jobs: JobStatus[]
 }
 
 export class Orchestrator {
@@ -176,7 +190,7 @@ export class Orchestrator {
         }
     }
 
-    public get all() {
+    public get all(): JobReport {
         const pending = _.map(this._pending, (value, key) => {
             return {
                 id: key,
@@ -198,7 +212,7 @@ export class Orchestrator {
         };
     }
 
-    public get completed() {
+    public get completed(): JobReport {
         const completed = _.map(this._jobStore.jobResults(), (value, key) => {
             return {
                 id: key,
@@ -212,7 +226,7 @@ export class Orchestrator {
         };
     }
 
-    public get errored() {
+    public get errored(): JobReport {
         const completed = _.map(this._jobStore.jobResults(), (value, key) => {
             return {
                 id: key,
@@ -226,7 +240,7 @@ export class Orchestrator {
         };
     }
 
-    public get pending() {
+    public get pending(): JobReport {
         const pending = _.map(this._pending, (value, key) => {
             return {
                 id: key,
@@ -239,7 +253,7 @@ export class Orchestrator {
         };
     }
 
-    public status(id: string) {
+    public status(id: string): JobStatus {
         const pending = this._pending[id];
         const res = !pending ? this._completed[id] : pending;
         const err = this._errors[id];
@@ -256,15 +270,15 @@ export class Orchestrator {
         }
     }
 
-    public fetch(id: string) {
+    public fetch(id: string): RemoteJobResult {
         return this.isComplete(id) ? this._jobStore.fetch(id) : undefined;
     }
 
-    public get(id: string) {
+    public get(id: string): RemoteJobResult {
         return this.isComplete(id) ? this._jobStore.get(id) : undefined;
     }
 
-    private isComplete(id: string) {
+    private isComplete(id: string): boolean {
         return !!this._completed[id] || !!this._errors[id];
     }
 
