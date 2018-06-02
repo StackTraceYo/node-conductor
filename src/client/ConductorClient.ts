@@ -1,5 +1,5 @@
-import * as request from "request";
 import {RequestCallback} from "request";
+import * as request from "request-promise";
 import * as winston from "winston";
 
 export interface ClientOrchestrator {
@@ -40,13 +40,13 @@ export class ConductorClient {
         this._config = config;
     }
 
-    public start() {
-        return this.add(this._config.address);
+    public async start() {
+        return await this.add(this._config.address);
     }
 
-    public add(address: string) {
+    public async add(address: string) {
         const orch: ClientOrchestrator = generate(address);
-        return this.connect(orch);
+        return await this.connect(orch);
     }
 
     public remove(address: string) {
@@ -60,62 +60,55 @@ export class ConductorClient {
         return !!this._remote;
     }
 
-    public check(id: string, cb?: RequestCallback) {
-        this.get(this._remote.check(id), this.createCallback(this._remote.check(id), cb));
+    public async check(id: string, cb?: RequestCallback) {
+        return await this.get(this._remote.check(id), this.createCallback(this._remote.check(id), cb));
     }
 
-    public done(cb?: RequestCallback) {
-        this.get(this._remote.done, this.createCallback(this._remote.done, cb));
+    public async done(cb?: RequestCallback) {
+        return await this.get(this._remote.done, this.createCallback(this._remote.done, cb));
     }
 
-    public health(cb?: RequestCallback) {
-            this.get(this._remote.health, this.createCallback(this._remote.health, cb));
+    public async health(cb?: RequestCallback) {
+        return await this.get(this._remote.health, this.createCallback(this._remote.health, cb));
     }
 
-    public jobs(cb?: RequestCallback) {
-        this.get(this._remote.jobs, this.createCallback(this._remote.jobs, cb));
+    public async jobs(cb?: RequestCallback) {
+        return await this.get(this._remote.jobs, this.createCallback(this._remote.jobs, cb));
     }
 
-    public pending(cb?: RequestCallback) {
-        this.get(this._remote.pending, this.createCallback(this._remote.pending, cb));
+    public async pending(cb?: RequestCallback) {
+        return await this.get(this._remote.pending, this.createCallback(this._remote.pending, cb));
     }
 
-    public result(id: string, cb?: RequestCallback) {
-        this.get(this._remote.result(id), this.createCallback(this._remote.result(id), cb));
+    public async result(id: string, cb?: RequestCallback) {
+        return await this.get(this._remote.result(id), this.createCallback(this._remote.result(id), cb));
     }
 
-    public status(id: string, cb?: RequestCallback) {
-        this.get(this._remote.status(id), this.createCallback(this._remote.status(id), cb));
+    public async status(id: string, cb?: RequestCallback) {
+        return await this.get(this._remote.status(id), this.createCallback(this._remote.status(id), cb));
     }
 
 
-    private connect(orch: ClientOrchestrator): Promise<ConductorClient> {
-        return new Promise((resolve, reject) => {
-
-                if (this._remote && this._remote.address !== orch.address) {
-                    this.LOGGER.info(
-                        `${orch.address} already connected`
-                    );
-                    reject(this);
-                } else {
-                    this.get(
-                        orch.health,
-                        this.createCallback(orch.health, (error, response) => {
-                            if (!error && response.statusCode === 200) {
-                                this.LOGGER.info(
-                                    `Adding`
-                                );
-                                this._remote = orch;
-                                resolve(this);
-                            } else {
-                                reject(this);
-                            }
-                        })
-                    );
-                }
-            }
-        );
-    };
+    private async connect(orch: ClientOrchestrator): Promise<ConductorClient> {
+        if (this._remote && this._remote.address !== orch.address) {
+            this.LOGGER.info(
+                `${orch.address} already connected`
+            );
+        } else {
+            await this.get(
+                orch.health,
+                this.createCallback(orch.health, (error, response) => {
+                    if (!error && response.statusCode === 200) {
+                        this._remote = orch;
+                        this.LOGGER.info(
+                            `Added`
+                        );
+                    }
+                })
+            );
+        }
+        return this;
+    }
 
     private createCallback(url: string, cb?: RequestCallback) {
         return (error, response, body) => {
@@ -124,7 +117,7 @@ export class ConductorClient {
                     `Successfully Called ${url}`
                 );
             } else {
-                this.LOGGER.warning(
+                this.LOGGER.warn(
                     `Failed to Find Orchestrator at ${url}`
                 );
             }
