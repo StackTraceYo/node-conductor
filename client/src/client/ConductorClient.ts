@@ -3,6 +3,41 @@ import * as request from "request-promise";
 import * as winston from "winston";
 import {ConnectionResponse, JobReport, JobResultResponse, RemoteJobStatus} from "..";
 
+export interface RemoteJobResult extends Result {
+    worker: string;
+    error?: boolean;
+}
+
+export interface JobResult extends Result {
+    name: string;
+}
+
+export interface Result {
+    id: string;
+    data: any;
+}
+
+export interface RemoteJobStatus {
+    id?: string;
+    status: string;
+    worker: string;
+}
+
+export interface JobReport {
+    jobs: RemoteJobStatus[];
+}
+
+export interface ConnectionResponse {
+    message: string;
+    id?: string;
+}
+
+
+export interface JobResultResponse {
+    data: JobResult;
+    message: string;
+}
+
 export interface ClientOrchestrator {
     address: string;
     health: string;

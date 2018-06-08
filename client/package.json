@@ -1,0 +1,50 @@
+{
+  "name": "nodejs-conductor-client",
+  "version": "0.1.3",
+  "author": "Ahmad Farag",
+  "private": false,
+  "scripts": {
+    "clean": "rimraf dist",
+    "lint": "tslint --config ./tslint.json src/**/*.ts",
+    "format": "prettier --tab-width 4 --write 'src/**/*.ts' 'tests/**/*.ts'",
+    "build": "tsc -p .",
+    "prepublish": "npm run clean && npm run lint &&  npm run build",
+    "start:test-client": "ts-node ./tests/Client.ts"
+  },
+  "repository": "https://github.com/stacktraceyo/node-conductor",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "files": [
+    "dist/"
+  ],
+  "devDependencies": {
+    "@types/chai": "^4.1.2",
+    "@types/lodash": "^4.14.104",
+    "@types/mocha": "^2.2.48",
+    "@types/node": "^9.4.6",
+    "@types/request": "^2.47.0",
+    "@types/request-promise": "^4.1.41",
+    "@types/sinon": "^4.1.4",
+    "@types/sinon-chai": "^2.7.29",
+    "@types/winston": "^2.3.9",
+    "@types/ws": "^4.0.1",
+    "chai": "^4.1.2",
+    "mocha": "^5.0.1",
+    "mocha-clean": "^1.0.0",
+    "prettier": "^1.11.1",
+    "rimraf": "^2.6.2",
+    "sinon": "^4.4.2",
+    "ts-lint": "^4.5.1",
+    "tslint-config-prettier": "^1.10.0"
+  },
+  "dependencies": {
+    "lodash": "^4.17.5",
+    "request": "^2.85.0",
+    "request-promise": "^4.2.2",
+    "ts-node": "^5.0.0",
+    "typescript": "^2.7.2",
+    "winston": "^2.4.2",
+    "ws": "^5.1.1"
+  }
+}
