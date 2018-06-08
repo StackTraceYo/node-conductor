@@ -13,6 +13,8 @@ exports.START = `[Job] Start`;
 exports.EXEC = `[Job] Executing`;
 exports.END = `[Job] End`;
 exports.ERROR = `[Job] Error`;
+exports.PRE = `[Job] Pre Run`;
+exports.POST = `[Job] Post Run`;
 class Job extends events_1.EventEmitter {
     constructor(_name) {
         super();
@@ -21,38 +23,46 @@ class Job extends events_1.EventEmitter {
     start(id) {
         return __awaiter(this, void 0, void 0, function* () {
             this.emit(exports.START, id);
+            yield this.preRun();
             this._running = true;
             this._id = id;
             this.emit(exports.EXEC);
-            let res = yield this.run();
+            const res = yield this.run();
             this.emit(exports.END, res);
             this._result = res.data;
             this._completed = true;
             this._running = false;
+            yield this.postRun();
             return res;
         });
     }
     getResult() {
         return this._result;
     }
-    run() {
-        return __awaiter(this, void 0, void 0, function* () {
-            let data = yield this.execute().catch(error => this.emit(exports.ERROR, { error: error, id: this._id }));
-            return {
-                id: this._id,
-                name: this._name,
-                data: data
-            };
-        });
-    }
     preRun() {
         return __awaiter(this, void 0, void 0, function* () {
-            return;
+            this.emit(exports.PRE);
         });
     }
     postRun() {
         return __awaiter(this, void 0, void 0, function* () {
-            return;
+            this.emit(exports.POST);
+        });
+    }
+    run() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const data = yield this.execute().catch((error) => __awaiter(this, void 0, void 0, function* () {
+                this.emit(exports.ERROR, { error, id: this._id });
+                this._completed = true;
+                this._running = false;
+                this._result = error;
+                yield this.postRun();
+            }));
+            return {
+                id: this._id,
+                name: this._name,
+                data
+            };
         });
     }
 }

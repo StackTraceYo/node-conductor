@@ -4,6 +4,7 @@ const bodyparser = require("body-parser");
 const express = require("express");
 const http = require("http");
 const uuid = require("uuid");
+const winston = require("winston");
 const __1 = require("../..");
 class OrchestratorServer {
     constructor(_orch) {
@@ -12,6 +13,7 @@ class OrchestratorServer {
         this.bodyParser = bodyparser;
         this.router = express.Router();
         this.server = http.createServer(this.app);
+        this.LOGGER = winston.loggers.get("ORCHESTRATOR-SERVER");
         this.app.use(this.bodyParser.urlencoded({ extended: true }));
         this.app.use(this.bodyParser.json());
         this.app.use("/orchestrator", this.router);
@@ -43,7 +45,7 @@ class OrchestratorServer {
             res.json({ message: "success" });
         });
         this.router.post("/job/complete", (req, res) => {
-            console.log("Completed Job:", req.body);
+            this.LOGGER.info("Completed Job:", req.body);
             const jobId = req.body.jobId || false;
             const worker = req.body.worker || false;
             const result = req.body.result;
@@ -59,8 +61,8 @@ class OrchestratorServer {
             }
             else {
                 res.json({
-                    message: "missing one or more values",
                     id: jobId,
+                    message: "missing one or more values",
                     worker
                 });
             }
@@ -93,7 +95,7 @@ class OrchestratorServer {
                 : res.json({ message: "none", data });
         });
         this.server.listen(process.env.PORT || 8999, () => {
-            console.log(`Orchestrator started on port ${this.server.address().port}`);
+            this.LOGGER.info(`Orchestrator started on port ${this.server.address().port}`);
         });
     }
 }
