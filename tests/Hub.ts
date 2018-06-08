@@ -1,7 +1,6 @@
-import { Orchestrator } from "../src/orchestration/orchestrator/Orchestrator";
-import { DispatchStrategyType } from "../src/orchestration/strategy/DispatchStrategy";
+import {DispatchStrategyType, Orchestrator} from "../src";
 
 const orch = new Orchestrator({
-    strategy: DispatchStrategyType.ROUND_ROBIN,
-    startServer: true
+    startServer: true,
+    strategy: DispatchStrategyType.ROUND_ROBIN
 });

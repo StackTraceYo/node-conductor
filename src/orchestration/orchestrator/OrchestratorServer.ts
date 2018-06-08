@@ -2,14 +2,27 @@ import * as bodyparser from "body-parser";
 import * as express from "express";
 import * as http from "http";
 import * as uuid from "uuid";
-import { RemoteWorker } from "../worker/RemoteWorker";
+import * as winston from "winston";
+import { JobResult, RemoteWorker } from "../..";
 import { Orchestrator } from "./Orchestrator";
+
+export interface ConnectionResponse {
+    message: string;
+    id?: string;
+}
+
+
+export interface JobResultResponse {
+    data: JobResult;
+    message: string;
+}
 
 export class OrchestratorServer {
     private app = express();
     private bodyParser = bodyparser;
     private router = express.Router();
     private server = http.createServer(this.app);
+    private LOGGER = winston.loggers.get("ORCHESTRATOR-SERVER");
 
     constructor(private readonly _orch: Orchestrator) {
         this.app.use(this.bodyParser.urlencoded({ extended: true }));
@@ -34,6 +47,8 @@ export class OrchestratorServer {
                 );
                 this._orch.register(remoteWorker.id, remoteWorker);
                 res.json({ message: "success", id: remoteWorker.id });
+            } else {
+                res.json({ message: "false" });
             }
         });
 
@@ -48,7 +63,7 @@ export class OrchestratorServer {
         });
 
         this.router.post("/job/complete", (req, res) => {
-            console.log("Completed Job:", req.body);
+            this.LOGGER.info("Completed Job:", req.body);
             const jobId = req.body.jobId || false;
             const worker = req.body.worker || false;
             const result: any = req.body.result;
@@ -62,16 +77,15 @@ export class OrchestratorServer {
                 res.json({ message: "success", id: jobId });
             } else {
                 res.json({
-                    message: "missing one or more values",
                     id: jobId,
+                    message: "missing one or more values",
                     worker
                 });
             }
         });
 
-        this.router.get("/test", (req, res) => {
-            const result = this._orch.schedule("test");
-            res.json(result);
+        this.router.get("/health", (req, res) => {
+            res.json({ message: "up" });
         });
 
         this.router.get("/job/", (req, res) => {
@@ -105,7 +119,7 @@ export class OrchestratorServer {
         });
 
         this.server.listen(process.env.PORT || 8999, () => {
-            console.log(
+            this.LOGGER.info(
                 `Orchestrator started on port ${this.server.address().port}`
             );
         });

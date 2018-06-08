@@ -1,18 +1,20 @@
-import { expect } from "chai";
+import {expect} from "chai";
 import "mocha";
-import {
-    END,
-    EXEC,
-    Job,
-    JobResult,
-    START
-} from "../../../src/dispatch/job/Job";
 import * as sinon from "sinon";
+import {END, EXEC, Job, JobResult, POST, PRE, START} from "../../../src";
 
-class TestJob extends Job<String> {
-    async execute(): Promise<string> {
+class TestJob extends Job<string> {
+    public async execute(): Promise<string> {
         this.emit("Executing Job");
         return "Job Return Value";
+    }
+
+    public async preRun(): Promise<void> {
+        return super.preRun();
+    }
+
+    public async postRun(): Promise<void> {
+        return super.postRun();
     }
 }
 
@@ -25,7 +27,7 @@ describe("Job", () => {
     it("should emit Start Event", () => {
         const job = new TestJob("test-job-name");
 
-        let spy = sinon.spy();
+        const spy = sinon.spy();
         job.on(START, spy);
 
         job.start("test");
@@ -35,17 +37,18 @@ describe("Job", () => {
     it("should emit Executing Event", () => {
         const job = new TestJob("test-job-name");
 
-        let spy = sinon.spy();
+        const spy = sinon.spy();
         job.on(EXEC, spy);
 
-        job.start("test");
-        sinon.assert.calledOnce(spy);
+        return job.start("test").then(() => {
+            sinon.assert.calledOnce(spy);
+        })
     });
 
     it("should emit Ending Event", () => {
         const job = new TestJob("test-job-name");
 
-        let spy = sinon.spy();
+        const spy = sinon.spy();
         job.on(END, spy);
 
         return job.start("test").then((result: JobResult) => {
@@ -57,34 +60,63 @@ describe("Job", () => {
     it("should emit Running Event", () => {
         const job = new TestJob("test-job-name");
 
-        let spy = sinon.spy();
+        const spy = sinon.spy();
 
         job.on("Executing Job", spy);
 
-        job.start("test");
-        sinon.assert.calledOnce(spy);
+        job.start("test").then(() => {
+            sinon.assert.calledOnce(spy);
+        })
+    });
+
+    it("should emit Pre Run Event", () => {
+        const job = new TestJob("test-job-name");
+
+        const spy = sinon.spy();
+
+        job.on(PRE, spy);
+
+        job.start("test").then(() => {
+            sinon.assert.calledOnce(spy);
+        })
+    });
+
+    it("should emit Post Run Event", () => {
+        const job = new TestJob("test-job-name");
+
+        const spy = sinon.spy();
+
+        job.on(POST, spy);
+
+        job.start("test").then(() => {
+            sinon.assert.calledOnce(spy);
+        })
     });
 
     it("should emit all Events", () => {
         const job = new TestJob("test-job-name");
 
-        let startSpy = sinon.spy();
-        let execSpy = sinon.spy();
-        let runSpy = sinon.spy();
-        let endSpy = sinon.spy();
+        const preSpy = sinon.spy();
+        const startSpy = sinon.spy();
+        const execSpy = sinon.spy();
+        const runSpy = sinon.spy();
+        const endSpy = sinon.spy();
+        const postSpy = sinon.spy();
 
         job.on(START, startSpy);
+        job.on(PRE, preSpy);
         job.on(EXEC, execSpy);
         job.on("Executing Job", runSpy);
         job.on(END, endSpy);
+        job.on(POST, postSpy);
 
         return job.start("test").then(value => {
             sinon.assert.calledOnce(startSpy);
             sinon.assert.calledOnce(execSpy);
             sinon.assert.calledOnce(runSpy);
             sinon.assert.calledOnce(endSpy);
-            //assert order
-            sinon.assert.callOrder(startSpy, execSpy, runSpy, endSpy);
+            // assert order
+            sinon.assert.callOrder(startSpy, preSpy, execSpy, runSpy, endSpy, postSpy);
         });
     });
 
@@ -92,16 +124,6 @@ describe("Job", () => {
         const job = new TestJob("test-job-name");
 
         return job.start("test").then(resolved => {
-            expect(job.getResult()).equals("Job Return Value");
-        });
-    });
-
-    xit("can be serialized", () => {
-        const job = new TestJob("test-job-name");
-
-        let s = JSON.stringify(job.start);
-        let f: Function = JSON.parse(s);
-        return f("test").then(resolved => {
             expect(job.getResult()).equals("Job Return Value");
         });
     });

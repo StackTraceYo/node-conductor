@@ -1,16 +1,16 @@
-import { expect } from "chai";
+import {expect} from "chai";
 import "mocha";
-import { Queue } from "../../../src/util/queue/Queue";
+import {Queue} from "../../../src";
 
 describe("Queue", () => {
     it("should be created", () => {
-        const result = new Queue<String>();
+        const result = new Queue<string>();
         expect(result).to.not.equal(null);
         expect(result.isEmpty()).to.equal(true);
     });
 
     it("should enqueue", () => {
-        const q = new Queue<String>();
+        const q = new Queue<string>();
         q.enqueue("Test");
         q.enqueue("Test 2");
         q.enqueue("Test 3");
@@ -23,7 +23,7 @@ describe("Queue", () => {
     });
 
     it("should return undefined for empty queue", () => {
-        const q = new Queue<String>();
+        const q = new Queue<string>();
         q.dequeue();
         const result = q.dequeue();
         expect(result).to.equal(undefined);
@@ -31,7 +31,7 @@ describe("Queue", () => {
     });
 
     it("should dequeue in correct order", () => {
-        const q = new Queue<String>();
+        const q = new Queue<string>();
         q.enqueue("Test");
         q.enqueue("Test 2");
         q.enqueue("Test 3");
@@ -48,7 +48,7 @@ describe("Queue", () => {
     });
 
     it("should allow peeking", () => {
-        const q = new Queue<String>();
+        const q = new Queue<string>();
         q.enqueue("Test");
         q.enqueue("Test 2");
         q.enqueue("Test 3");

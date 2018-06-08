@@ -1,10 +1,12 @@
 import {
     Dispatcher,
-    DispatcherConfig
-} from "../../dispatch/dispatcher/Dispatcher";
-import { Job, JobError, JobListener } from "../../dispatch/job/Job";
-import { JobStore } from "../../store/JobStore";
-import { RemoteOrchestrator } from "../orchestrator/RemoteOrchestrator";
+    DispatcherConfig,
+    Job,
+    JobError,
+    JobListener,
+    JobStore,
+    RemoteOrchestrator
+} from "../..";
 import { WorkNodeServer } from "./WorkNodeServer";
 
 export interface WorkNodeConfig {

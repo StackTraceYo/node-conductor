@@ -3,8 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const request = require("request");
 const winston = require("winston");
-const JobResultStore_1 = require("../../store/JobResultStore");
-const DispatchStrategy_1 = require("../strategy/DispatchStrategy");
+const __1 = require("../..");
 const OrchestratorServer_1 = require("./OrchestratorServer");
 class Orchestrator {
     constructor(config) {
@@ -16,11 +15,11 @@ class Orchestrator {
         this._completed = {};
         this._listeners = {};
         this._errors = {};
-        this._jobStore = new JobResultStore_1.JobResultStore();
+        this._jobStore = new __1.JobResultStore();
         if (config.startServer) {
             this._server = new OrchestratorServer_1.OrchestratorServer(this);
         }
-        this._strategy = DispatchStrategy_1.DispatchStrategy.createFromType(config.strategy || DispatchStrategy_1.DispatchStrategyType.ROUND_ROBIN);
+        this._strategy = __1.DispatchStrategy.createFromType(config.strategy || __1.DispatchStrategyType.ROUND_ROBIN);
     }
     register(address, worker) {
         this._workers[address] = worker;
@@ -91,7 +90,7 @@ class Orchestrator {
             this._jobStore.push({
                 data: result,
                 id: job,
-                worker,
+                worker
             });
         }
     }
@@ -118,7 +117,7 @@ class Orchestrator {
             return {
                 id: key,
                 status: "pending",
-                worker: value.worker,
+                worker: value.worker
             };
         });
         const completed = _.map(this._jobStore.jobResults(), (value, key) => {
