@@ -120,7 +120,7 @@ export class OrchestratorServer {
 
         this.server.listen(process.env.PORT || 8999, () => {
             this.LOGGER.info(
-                `Orchestrator started on port ${this.server.address().port}`
+                `Orchestrator started at ${this.server.address()}`
             );
         });
     }
