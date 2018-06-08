@@ -45,5 +45,15 @@ class Job extends events_1.EventEmitter {
             };
         });
     }
+    preRun() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return;
+        });
+    }
+    postRun() {
+        return __awaiter(this, void 0, void 0, function* () {
+            return;
+        });
+    }
 }
 exports.Job = Job;

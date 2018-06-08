@@ -3,9 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const _ = require("lodash");
 const uuid_1 = require("uuid");
 const winston = require("winston");
-const JobResultStore_1 = require("../../store/JobResultStore");
-const Queue_1 = require("../../util/queue/Queue");
-const Job_1 = require("../job/Job");
+const __1 = require("../..");
 var JobStatus;
 (function (JobStatus) {
     JobStatus[JobStatus["Queued"] = 0] = "Queued";
@@ -25,7 +23,7 @@ const defaultConfig = {
 };
 class Dispatcher {
     constructor(config) {
-        this._store = new JobResultStore_1.JobResultStore();
+        this._store = new __1.JobResultStore();
         this.LOGGER = winston.loggers.get("DISPATCHER");
         this.startListener = (job) => {
             this.LOGGER.info(`Job ${job} Was Started`);
@@ -46,7 +44,7 @@ class Dispatcher {
             delete this._running[returnValue.id];
             this.LOGGER.info(`Running -> ${this._numberRunning}\n Queued -> ${this.jobsQueued()}`);
         };
-        this._jobQueue = new Queue_1.Queue();
+        this._jobQueue = new __1.Queue();
         this._numberRunning = 0;
         this._idle = false;
         this._idleCycles = 0;
@@ -167,22 +165,22 @@ class Dispatcher {
             (this._listeners[id] || this._listeners[id] === null));
     }
     bind(id, job) {
-        job.on(Job_1.START, this.startListener);
-        job.on(Job_1.END, this.endListener);
-        job.on(Job_1.ERROR, this.errorListener);
+        job.on(__1.START, this.startListener);
+        job.on(__1.END, this.endListener);
+        job.on(__1.ERROR, this.errorListener);
         const listener = this._listeners[id];
         if (listener) {
             if (listener.onJobStarted) {
-                job.on(Job_1.START, listener.onJobStarted);
+                job.on(__1.START, listener.onJobStarted);
             }
             if (listener.onJobRunning) {
-                job.on(Job_1.EXEC, listener.onJobRunning);
+                job.on(__1.EXEC, listener.onJobRunning);
             }
             if (listener.onJobCompleted) {
-                job.on(Job_1.END, listener.onJobCompleted);
+                job.on(__1.END, listener.onJobCompleted);
             }
             if (listener.onJobError) {
-                job.on(Job_1.ERROR, listener.onJobError);
+                job.on(__1.ERROR, listener.onJobError);
             }
         }
     }

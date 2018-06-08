@@ -1,12 +1,7 @@
-import { RequestCallback } from "request";
+import {RequestCallback} from "request";
 import * as request from "request-promise";
 import * as winston from "winston";
-import {
-    ConnectionResponse,
-    JobReport,
-    JobResultResponse,
-    RemoteJobStatus
-} from "..";
+import {ConnectionResponse, JobReport, JobResultResponse, RemoteJobStatus} from "..";
 
 export interface ClientOrchestrator {
     address: string;
@@ -64,70 +59,59 @@ export class ConductorClient {
         return !!this._remote;
     }
 
-    public async check(
-        id: string,
-        cb?: RequestCallback
-    ): Promise<JobResultResponse> {
+    public async check(id: string): Promise<JobResultResponse> {
         return await this.get<JobResultResponse>(
             this._remote.check(id),
-            this.createCallback(this._remote.check(id), cb)
+            this.createCallback(this._remote.check(id))
         );
     }
 
-    public async done(cb?: RequestCallback): Promise<JobReport> {
+    public async done(): Promise<JobReport> {
         return await this.get<JobReport>(
             this._remote.done,
-            this.createCallback(this._remote.done, cb)
+            this.createCallback(this._remote.done)
         );
     }
 
-    public async health(cb?: RequestCallback): Promise<ConnectionResponse> {
+    public async health(): Promise<ConnectionResponse> {
         return await this.get<ConnectionResponse>(
             this._remote.health,
-            this.createCallback(this._remote.health, cb)
+            this.createCallback(this._remote.health)
         );
     }
 
-    public async jobs(cb?: RequestCallback): Promise<JobReport> {
+    public async jobs(): Promise<JobReport> {
         return await this.get<JobReport>(
             this._remote.jobs,
-            this.createCallback(this._remote.jobs, cb)
+            this.createCallback(this._remote.jobs)
         );
     }
 
-    public async pending(cb?: RequestCallback): Promise<JobReport> {
+    public async pending(): Promise<JobReport> {
         return await this.get<JobReport>(
             this._remote.pending,
-            this.createCallback(this._remote.pending, cb)
+            this.createCallback(this._remote.pending)
         );
     }
 
-    public async result(
-        id: string,
-        cb?: RequestCallback
-    ): Promise<JobResultResponse> {
+    public async result(id: string): Promise<JobResultResponse> {
         return await this.get<JobResultResponse>(
             this._remote.result(id),
-            this.createCallback(this._remote.result(id), cb)
+            this.createCallback(this._remote.result(id))
         );
     }
 
-    public async status(
-        id: string,
-        cb?: RequestCallback
-    ): Promise<RemoteJobStatus> {
+    public async status(id: string): Promise<RemoteJobStatus> {
         return await this.get<RemoteJobStatus>(
             this._remote.status(id),
-            this.createCallback(this._remote.status(id), cb)
+            this.createCallback(this._remote.status(id))
         );
     }
 
-    private async connect(
-        orch: ClientOrchestrator
-    ): Promise<ConnectionResponse> {
+    private async connect(orch: ClientOrchestrator): Promise<ConnectionResponse> {
         if (this._remote && this._remote.address !== orch.address) {
             this.LOGGER.info(`${orch.address} already connected`);
-            return { message: "up" };
+            return {message: "up"};
         } else {
             return await this.get<ConnectionResponse>(
                 orch.health,
@@ -159,6 +143,6 @@ export class ConductorClient {
     }
 
     private async post<T>(url: string, data: any, cb: RequestCallback) {
-        return await request.post(url, { json: data }, cb);
+        return await request.post(url, {json: data}, cb);
     }
 }

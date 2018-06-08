@@ -1,7 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-const Dispatcher_1 = require("../../dispatch/dispatcher/Dispatcher");
-const RemoteOrchestrator_1 = require("../orchestrator/RemoteOrchestrator");
+const __1 = require("../..");
 const WorkNodeServer_1 = require("./WorkNodeServer");
 class WorkNode {
     constructor(config) {
@@ -31,14 +30,14 @@ class WorkNode {
         };
         this._orchAddress = config.orchestratorAddress;
         this._jobStore = config.jobstore;
-        this._dispatcher = new Dispatcher_1.Dispatcher(config.dispatchConfig);
+        this._dispatcher = new __1.Dispatcher(config.dispatchConfig);
         this._server = new WorkNodeServer_1.WorkNodeServer(this, { port: config.port });
         const remote = {
             jobs: this._jobStore.jobs,
             address: config.address,
             port: config.port
         };
-        this._remoteOrchestrator = new RemoteOrchestrator_1.RemoteOrchestrator(this._orchAddress);
+        this._remoteOrchestrator = new __1.RemoteOrchestrator(this._orchAddress);
         this.connectToOrchestrator(remote);
     }
     connectToOrchestrator(data) {

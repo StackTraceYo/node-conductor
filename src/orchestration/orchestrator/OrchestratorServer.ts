@@ -2,6 +2,7 @@ import * as bodyparser from "body-parser";
 import * as express from "express";
 import * as http from "http";
 import * as uuid from "uuid";
+import * as winston from "winston";
 import { JobResult, RemoteWorker } from "../..";
 import { Orchestrator } from "./Orchestrator";
 
@@ -10,11 +11,6 @@ export interface ConnectionResponse {
     id?: string;
 }
 
-export interface JobResponse {
-    message: string;
-    id?: string;
-    worker?: string;
-}
 
 export interface JobResultResponse {
     data: JobResult;
@@ -26,6 +22,7 @@ export class OrchestratorServer {
     private bodyParser = bodyparser;
     private router = express.Router();
     private server = http.createServer(this.app);
+    private LOGGER = winston.loggers.get("ORCHESTRATOR-SERVER");
 
     constructor(private readonly _orch: Orchestrator) {
         this.app.use(this.bodyParser.urlencoded({ extended: true }));
@@ -66,7 +63,7 @@ export class OrchestratorServer {
         });
 
         this.router.post("/job/complete", (req, res) => {
-            console.log("Completed Job:", req.body);
+            this.LOGGER.info("Completed Job:", req.body);
             const jobId = req.body.jobId || false;
             const worker = req.body.worker || false;
             const result: any = req.body.result;
@@ -80,8 +77,8 @@ export class OrchestratorServer {
                 res.json({ message: "success", id: jobId });
             } else {
                 res.json({
-                    message: "missing one or more values",
                     id: jobId,
+                    message: "missing one or more values",
                     worker
                 });
             }
@@ -122,7 +119,7 @@ export class OrchestratorServer {
         });
 
         this.server.listen(process.env.PORT || 8999, () => {
-            console.log(
+            this.LOGGER.info(
                 `Orchestrator started on port ${this.server.address().port}`
             );
         });

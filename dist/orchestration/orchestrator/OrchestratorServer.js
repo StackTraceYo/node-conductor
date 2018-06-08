@@ -4,7 +4,7 @@ const bodyparser = require("body-parser");
 const express = require("express");
 const http = require("http");
 const uuid = require("uuid");
-const RemoteWorker_1 = require("../worker/RemoteWorker");
+const __1 = require("../..");
 class OrchestratorServer {
     constructor(_orch) {
         this._orch = _orch;
@@ -25,9 +25,12 @@ class OrchestratorServer {
                 address = req.body.port
                     ? address + ":" + req.body.port
                     : address;
-                const remoteWorker = new RemoteWorker_1.RemoteWorker(uuid.v4(), address, jobs);
+                const remoteWorker = new __1.RemoteWorker(uuid.v4(), address, jobs);
                 this._orch.register(remoteWorker.id, remoteWorker);
                 res.json({ message: "success", id: remoteWorker.id });
+            }
+            else {
+                res.json({ message: "false" });
             }
         });
         this.router.post("/disconnect", (req, res) => {
